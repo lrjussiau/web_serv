@@ -1,9 +1,7 @@
 #ifndef CONFIG_HPP
 #define CONFIG_HPP
 
-#include <string>
-#include <vector>
-#include <map>
+#include "WebServ.hpp"
 
 class Config {
 private:
@@ -27,15 +25,15 @@ private:
         std::string					save_path;
     };
 
-    std::vector<RouteConfig> _routes;
+    std::vector<RouteConfig>    _routes;
 
 public:
-    Config(const std::string& configFile);
+    Config();
 	virtual ~Config();
 	Config(const Config& src);
 	Config &operator=(const Config& src);
 
-    void parseConfigFile();
+    void parseConfigFile(const std::string& configFile);
 
     std::string 						getHost() const;
     int 								getPort() const;
