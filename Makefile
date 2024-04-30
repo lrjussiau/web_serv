@@ -9,10 +9,10 @@ OBJDIR = .objFiles
 SRCDIR = src
 INCDIR = inc
 
-FILES		= main Config
+FILES		= main Config Utils
 SRC			= $(addprefix $(SRCDIR)/, $(FILES:=.cpp))
 OBJ			= $(addprefix $(OBJDIR)/, $(FILES:=.o))
-HEADER		= $(addprefix $(INCDIR)/, Config.hpp WebServ.hpp)
+HEADER		= $(addprefix $(INCDIR)/, Config.hpp WebServ.hpp Utils.hpp)
 
 # Colors:
 GREEN		=	\e[92;5;118m

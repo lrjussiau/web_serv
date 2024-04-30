@@ -16,5 +16,15 @@ public:
     }
 };
 
+class BlockParser {
+private:
+    std::string data;
+    size_t pos;
+
+public:
+    BlockParser(const std::string& inputData);
+    std::string getNextBlock();
+};
+
 #endif
 

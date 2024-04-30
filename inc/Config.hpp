@@ -3,29 +3,37 @@
 
 #include "WebServ.hpp"
 
+struct RouteConfig {
+    std::string 				_path;
+    std::string 				_root;
+    std::string 				_default_file;
+    bool 						_directory_listing;
+    std::vector<std::string> 	_allowed_methods;
+    bool 						_cgi_enabled;
+    std::string 				_cgi_handler;
+    std::vector<std::string> 	_file_extensions;
+    bool 						_upload_enabled;
+    std::string					_save_path;
+};
+
+struct ServerConfig {
+    std::string                 _host;
+    unsigned int                _port;
+    std::string                 _server_name;
+    bool                        _default_server;
+    std::map<int, std::string>  _error_pages;
+    size_t                      _max_body_size;
+    std::vector<RouteConfig>    _routes;
+};
+
+
 class Config {
 private:
-    std::string					_host;
-    int 						_port;
-    std::string 				_server_name;
-    bool 						_default_server;
-    std::map<int, std::string>	_error_pages;
-    size_t						_max_body_size;
+    std::vector<ServerConfig> _config;
 
-    struct RouteConfig {
-        std::string 				path;
-        std::string 				root;
-        std::string 				default_file;
-        bool 						directory_listing;
-        std::vector<std::string> 	allowed_methods;
-        bool 						cgi_enabled;
-        std::string 				cgi_handler;
-        std::vector<std::string> 	file_extensions;
-        bool 						upload_enabled;
-        std::string					save_path;
-    };
-
-    std::vector<RouteConfig>    _routes;
+    void	separateServer(std::string content);
+    void	parseServer(std::string block);
+    void    printConfig();
 
 public:
     Config();
@@ -33,7 +41,8 @@ public:
 	Config(const Config& src);
 	Config &operator=(const Config& src);
 
-    void parseConfigFile(const std::string& configFile);
+    void    parseConfigFile(const std::string& configFile);
+    void    addServer(const ServerConfig& serverConfig);
 
     std::string 						getHost() const;
     int 								getPort() const;
@@ -43,5 +52,7 @@ public:
     size_t 								getMaxBodySize() const;
     const std::vector<RouteConfig>& 	getRoutes() const;
 };
+
+std::string trim(const std::string& str);
 
 #endif
