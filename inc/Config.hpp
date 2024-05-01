@@ -32,8 +32,9 @@ private:
     std::vector<ServerConfig> _config;
 
     void	separateServer(std::string content);
-    void	parseServer(std::string block);
+    void	parseBlock(std::string block);
     void    printConfig();
+    void    checker();
 
 public:
     Config();
@@ -42,7 +43,6 @@ public:
 	Config &operator=(const Config& src);
 
     void    parseConfigFile(const std::string& configFile);
-    void    addServer(const ServerConfig& serverConfig);
 
     std::string 						getHost() const;
     int 								getPort() const;

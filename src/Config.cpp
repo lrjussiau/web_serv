@@ -25,9 +25,9 @@ std::string trim(const std::string& str) {
     return str.substr(first, (last - first + 1));
 }
 
-void    Config::addServer(const ServerConfig& serverConfig) {
-        _config.push_back(serverConfig);
-};
+std::string getValue(std::string line) {
+	return (trim(line.substr(line.find(":") + 1)));
+}
 
 void Config::printConfig() {
 	int i = 0;
@@ -37,7 +37,7 @@ void Config::printConfig() {
 	std::cout << "------------------------------------" << RESET << std::endl;
 	for (std::vector<ServerConfig>::iterator it = _config.begin(); it != _config.end(); ++it) {
 		i++;
-		std::cout << GREEN << BOLD << "server " << i << " :" << RESET << std::endl;
+		std::cout << std::endl << GREEN << BOLD << "server " << i << " :" << RESET << std::endl;
     	std::cout << "host : " << it->_host << std::endl;
 		std::cout << "port : " << it->_port << std::endl;
 		std::cout << "server_name : " << it->_server_name << std::endl;
@@ -75,17 +75,90 @@ void Config::printConfig() {
 			}
 		}
 	}
-
-
 	std::cout << BOLD << CYAN << "------------------------------------" << RESET << std::endl;
-
 }
 
 //---------------------------------------//
 //             	  Parsing                //
 //---------------------------------------//
 
-void	Config::parseServer(std::string block) {
+void	parseRoute(std::string line, RouteConfig &route) {
+	if (line.find("save_path:") != std::string::npos) {
+        route._save_path = getValue(line);
+		route._upload_enabled = true;
+	}
+    if (line.find("path:") != std::string::npos) {
+        route._path = getValue(line);
+    } else if (line.find("root:") != std::string::npos) {
+        route._root = getValue(line);
+    } else if (line.find("default_file:") != std::string::npos) {
+        route._default_file = getValue(line);
+    } else if (line.find("directory_listing:") != std::string::npos) {
+        if (getValue(line) == "on")
+            route._directory_listing = true;
+		else
+			route._directory_listing = false;
+	} else if (line.find("allowed_methods:") != std::string::npos) {
+		std::stringstream ss(getValue(line));
+		std::string token;
+
+		while (getline(ss, token, ',')) {
+			route._allowed_methods.push_back(trim(token));
+		}
+	} else if (line.find("handler:") != std::string::npos) {
+        route._cgi_handler = getValue(line);
+		route._cgi_enabled = true;
+	} else if (line.find("file_extensions:") != std::string::npos) {
+		std::stringstream ss(getValue(line));
+		std::string token;
+
+		while (getline(ss, token, ',')) {
+			route._file_extensions.push_back(trim(token));
+		}
+	}
+}
+
+void	parseServer(std::string line, ServerConfig &server) {
+    if (line.find("host:") != std::string::npos) {
+        server._host = getValue(line);
+    } else if (line.find("port:") != std::string::npos) {
+		try {
+            server._port = std::stoul(getValue(line));
+		} catch (...) {
+			throw Except("port must be a unsigned int");
+		}
+     } else if (line.find("server_name:") != std::string::npos) {
+        server._server_name = getValue(line);
+	} else if (line.find("default_server:") != std::string::npos) {
+        if (getValue(line) == "true")
+        	server._default_server = true;
+		else
+			server._default_server = false;
+	} else if (line.find("client_max_body_size:") != std::string::npos) {
+		try {
+        	server._max_body_size = std::stol(getValue(line));
+		} catch (...) {
+			throw Except("client_max_body_size must be a unsigned int");
+		}
+	} else if (line.find("error_pages:") != std::string::npos) {
+		std::stringstream 	ss(getValue(line));
+		std::string			token;
+
+		while (getline(ss, token, ',')) {
+			std::stringstream pairStream(token);
+			int code;
+			std::string path;
+
+			pairStream >> code;
+			pairStream >> path;
+			if (path.empty() || !code)
+				throw Except("Error page must have a int and a path");
+			server._error_pages[code] = path;
+		}
+	}
+}
+
+void	Config::parseBlock(std::string block) {
 	std::istringstream iss(block);
     std::string line;
     ServerConfig server;
@@ -111,77 +184,10 @@ void	Config::parseServer(std::string block) {
             bracet--;
             continue;
         }
-
         if (inRoute) {
-			if (line.find("save_path:") != std::string::npos) {
-                route._save_path = line.substr(line.find(":") + 1);
-                route._save_path = trim(route._save_path);
-				route._upload_enabled = true;
-			}
-            if (line.find("path:") != std::string::npos) {
-                route._path = line.substr(line.find(":") + 1);
-                route._path = trim(route._path);
-            } else if (line.find("root:") != std::string::npos) {
-                route._root = line.substr(line.find(":") + 1);
-                route._root = trim(route._root);
-            } else if (line.find("default_file:") != std::string::npos) {
-                route._default_file = line.substr(line.find(":") + 1);
-                route._default_file = trim(route._default_file);
-            } else if (line.find("directory_listing:") != std::string::npos) {
-                if ((trim(line.substr(line.find(":") + 1))) == "on")
-                	route._directory_listing = true;
-				else
-					route._directory_listing = false;
-			} else if (line.find("allowed_methods:") != std::string::npos) {
-				std::stringstream ss(trim(line.substr(line.find(":") + 1)));
-				std::string token;
-
-				while (getline(ss, token, ',')) {
-					route._allowed_methods.push_back(trim(token));
-				}
-			} else if (line.find("handler:") != std::string::npos) {
-                route._cgi_handler = line.substr(line.find(":") + 1);
-                route._cgi_handler = trim(route._cgi_handler );
-				route._cgi_enabled = true;
-			} else if (line.find("file_extensions:") != std::string::npos) {
-				std::stringstream ss(trim(line.substr(line.find(":") + 1)));
-				std::string token;
-
-				while (getline(ss, token, ',')) {
-					route._file_extensions.push_back(trim(token));
-				}
-			}
+			parseRoute(line, route);
         } else {
-            if (line.find("host:") != std::string::npos) {
-                server._host = line.substr(line.find(":") + 1);
-                server._host = trim(server._host);
-            } else if (line.find("port:") != std::string::npos) {
-                server._port = std::stoul(trim(line.substr(line.find(":") + 1)));
-            } else if (line.find("server_name:") != std::string::npos) {
-                server._server_name = line.substr(line.find(":") + 1);
-                server._server_name = trim(server._server_name);
-			} else if (line.find("default_server:") != std::string::npos) {
-                if ((trim(line.substr(line.find(":") + 1))) == "true")
-                	server._default_server = true;
-				else
-					server._default_server = false;
-			} else if (line.find("client_max_body_size:") != std::string::npos) {
-                server._max_body_size = std::stol(trim(line.substr(line.find(":") + 1)));
-			} else if (line.find("error_pages:") != std::string::npos) {
-				std::stringstream ss(trim(line.substr(line.find(":") + 1)));
-				std::string token;
-
-				while (getline(ss, token, ',')) {
-					std::stringstream pairStream(token);
-					int code;
-					std::string path;
-
-					pairStream >> code;
-					pairStream >> path;
-
-					server._error_pages[code] = path;
-				}
-			}
+			parseServer(line, server);
         }
     }
 	_config.push_back(server);
@@ -192,8 +198,19 @@ void	Config::separateServer(std::string content) {
     std::string block;
 
     while (!(block = parser.getNextBlock()).empty()) {
-		parseServer(block);
+		parseBlock(block);
     }
+}
+
+void	Config::checker() {
+	for (std::vector<ServerConfig>::iterator it = _config.begin(); it != _config.end(); ++it) {
+		if (!it->_port)
+			throw Except("port is missing, please provide a int beetween 0 and 65535");
+		if (it->_port > 65535 || it->_port < 0)
+			throw Except("port must be beetween 0 and 65535");
+		if (it->_host.empty())
+			throw Except("host is missing, please provide the host adress");
+	}
 }
 
 void Config::parseConfigFile(const std::string& configFile) {
@@ -209,6 +226,7 @@ void Config::parseConfigFile(const std::string& configFile) {
 	separateServer(content);
 	// if (DEBUG)
 		printConfig();
+	checker();
 }
 
 
