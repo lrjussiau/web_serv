@@ -86,8 +86,7 @@ void	parseRoute(std::string line, RouteConfig &route) {
 	if (line.find("save_path:") != std::string::npos) {
         route._save_path = getValue(line);
 		route._upload_enabled = true;
-	}
-    if (line.find("path:") != std::string::npos) {
+	} else if (line.find("path:") != std::string::npos) {
         route._path = getValue(line);
     } else if (line.find("root:") != std::string::npos) {
         route._root = getValue(line);
@@ -210,6 +209,26 @@ void	Config::checker() {
 			throw Except("port must be beetween 0 and 65535");
 		if (it->_host.empty())
 			throw Except("host is missing, please provide the host adress");
+		for (std::vector<RouteConfig>::iterator ite = it->_routes.begin(); ite != it->_routes.end(); ++ite) {
+			if (ite->_path.empty())
+				throw Except("you need to specified a path");
+			if (ite->_path[0] != '/')
+				throw Except("the path must start by /");
+			if (ite->_root.empty())
+				throw Except("you need to specified a root");
+			if (ite->_root[0] != '/')
+				throw Except("the root must start by /");
+			if (ite->_default_file.empty())
+				throw Except("you need to specified a default file");
+			if (ite->_cgi_handler.empty() && ite->_cgi_enabled)
+				throw Except("you need to specified a cgi handler");
+			if (ite->_cgi_handler[0] != '/' && ite->_cgi_enabled)
+				throw Except("the CGI handler must start by /");
+			if (ite->_save_path.empty() && ite->_upload_enabled)
+				throw Except("you need to specified a save_path");
+			if (ite->_save_path[0] != '/' && ite->_upload_enabled)
+				throw Except("the save path must start by /");
+		}
 	}
 }
 
