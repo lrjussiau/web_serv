@@ -32,12 +32,12 @@ std::string getValue(std::string line) {
 void Config::printConfig() {
 	int i = 0;
 
-	std::cout << BOLD << CYAN << "------------------------------------" << std::endl;
+	std::cout << CYA << "------------------------------------" << std::endl;
 	std::cout << "           Config data" << std::endl;
-	std::cout << "------------------------------------" << RESET << std::endl;
+	std::cout << "------------------------------------" << RST << std::endl;
 	for (std::vector<ServerConfig>::iterator it = _config.begin(); it != _config.end(); ++it) {
 		i++;
-		std::cout << std::endl << GREEN << BOLD << "server " << i << " :" << RESET << std::endl;
+		std::cout << std::endl << GRN << "server " << i << " :" << RST << std::endl;
     	std::cout << "host : " << it->_host << std::endl;
 		std::cout << "port : " << it->_port << std::endl;
 		std::cout << "server_name : " << it->_server_name << std::endl;
@@ -75,7 +75,7 @@ void Config::printConfig() {
 			}
 		}
 	}
-	std::cout << BOLD << CYAN << "------------------------------------" << RESET << std::endl;
+	std::cout << CYA << "------------------------------------" << RST << std::endl;
 }
 
 //---------------------------------------//

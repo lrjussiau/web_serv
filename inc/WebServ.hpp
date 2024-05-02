@@ -1,21 +1,23 @@
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
+// DEFINES
+# ifndef DEBUG
+#  define DEBUG 0
+# endif
 
-#define RESET "\033[0m"
+// COLORS
+#define RST "\033[0m"
+#define RED "\033[1;31m"
+#define GRN "\033[1;32m"
+#define YEL "\033[1;33m"
+#define BLU "\033[1;34m"
+#define MAG "\033[1;35m"
+#define CYA "\033[1;36m"
+#define WHT "\033[1;37m"
+#define CLR "\033[2J\033[1;1H"
 
-#define BLACK "\033[30m"    
-#define RED "\033[31m"        
-#define GREEN "\033[32m"     
-#define YELLOW "\033[33m"    
-#define BLUE "\033[34m"     
-#define MAGENTA "\033[35m"    
-#define CYAN "\033[36m"     
-#define WHITE "\033[37m"      
-
-#define BOLD "\033[1m"
-
-
+// INCLUDES
 #include <string>
 #include <vector>
 #include <map>
@@ -28,8 +30,5 @@
 #include "Config.hpp"
 #include "Utils.hpp"
 
-# ifndef DEBUG
-#  define DEBUG 0
-# endif
 
 #endif

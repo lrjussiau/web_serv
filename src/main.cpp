@@ -8,7 +8,7 @@ int main(int argc, char **argv) {
 		Config Test;
 		Test.parseConfigFile(argv[1]);
     } catch (const Except& e) {
-        std::cout << BOLD << RED << "Caught an exception: " << e.what() << RESET << std::endl;
+        std::cout << RED << "Caught an exception: " << e.what() << RST << std::endl;
     }
 }
 
