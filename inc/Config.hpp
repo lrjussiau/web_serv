@@ -44,13 +44,7 @@ public:
 
     void    parseConfigFile(const std::string& configFile);
 
-    std::string 						getHost() const;
-    int 								getPort() const;
-    std::string 						getServerName() const;
-    bool 								isDefaultServer() const;
-    std::map<int, std::string>			getErrorPages() const;
-    size_t 								getMaxBodySize() const;
-    const std::vector<RouteConfig>& 	getRoutes() const;
+    std::vector<ServerConfig>   getConfig() const;
 };
 
 std::string trim(const std::string& str);
