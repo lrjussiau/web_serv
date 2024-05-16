@@ -67,6 +67,8 @@
 		"iomanip": "cpp",
 		"stack": "cpp",
 		"filesystem": "cpp",
-		"__memory": "cpp"
+		"__memory": "cpp",
+		"stdio.h": "c",
+		"string.h": "c"
 	}
 }
