@@ -16,6 +16,7 @@ struct RouteConfig {
     std::string					_save_path;
 };
 
+/*bool	_is_IPv4;*/
 struct ServerConfig {
     std::string                 _host;
     unsigned int                _port;

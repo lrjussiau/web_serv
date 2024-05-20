@@ -27,6 +27,8 @@
 #include <fstream>
 #include <sstream>
 
+#include <sys/socket.h>
+
 #include "Config.hpp"
 #include "Utils.hpp"
 
