@@ -26,11 +26,13 @@
 #include <exception>
 #include <fstream>
 #include <sstream>
+#include <string>
 
 #include <sys/socket.h>
 
 #include "Config.hpp"
 #include "Utils.hpp"
+#include "Client.hpp"
 
 
 #endif

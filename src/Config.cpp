@@ -1,5 +1,6 @@
 #include "../inc/Config.hpp"
 
+
 // ------------------------------------------------------
 // 					Canonical Form
 // ------------------------------------------------------
@@ -26,6 +27,36 @@ Config &Config::operator=(const Config &src) {
 // ------------------------------------------------------
 // 					Parse Config File
 // ------------------------------------------------------
+
+int Config::parseSize(const std::string &size_str) {
+    std::string numStr;
+	int 		num = 0;
+
+    for (size_t i = 0; i < size_str.size(); ++i) {
+        if (std::isdigit(size_str[i])) {
+            numStr += size_str[i];
+        } else if (std::isalpha(size_str[i])) {
+            if (!numStr.empty()) {
+                num = std::stoi(numStr);
+                switch (size_str[i]) {
+                    case 'M':
+                        num *= 1000000;
+                        break;
+                    case 'K':
+                        num *= 1000;
+                        break;
+                    case 'G':
+                        num *= 1000000000;
+                        break;
+                }
+            }
+        } else if (size_str[i] == ' ' && !numStr.empty()) {
+            num = std::stoi(numStr);
+        }
+    }
+	numStr.clear();
+    return num;
+}
 
 void Config::loadFromFile(const std::string &filename) {
     std::ifstream file(filename.c_str());
@@ -60,8 +91,6 @@ void Config::loadFromFile(const std::string &filename) {
 
 void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
     std::string line;
-    bool in_location_block = false;
-    Location current_location;
 
     while (std::getline(file, line)) {
         std::istringstream iss(line);
@@ -74,32 +103,36 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
             server.listen_ports.push_back(port);
         } else if (token == "server_name") {
             iss >> server.server_name;
-        } else if (token == "root" && !in_location_block) {
+        } else if (token == "root") {
             iss >> server.root;
         } else if (token == "index") {
             iss >> server.index;
-        } else if (token == "error_page") {
-            iss >> server.error_page;
-        } else if (token == "client_max_body_size") {
-            iss >> server.client_max_body_size;
-        } else if (token == "location") {
-            if (in_location_block) {
-                server.locations[current_location.path] = current_location;
-                current_location = Location();
+        } else if (token == "error_page" || token == "500" || token == "300" || token == "400") {
+            int error_code;
+			if (token != "error_page") {
+				server.error_pages[std::stoi(token)] = "./src/html/error_page/" + token + ".html";
+			}
+            while (iss >> error_code) {
+                server.error_pages[error_code] = "./src/html/error_page/" + std::to_string(error_code) + ".html";
             }
-            iss >> current_location.path;
-            in_location_block = true;
-            parseLocationBlock(file, current_location);
-            in_location_block = false;
-            server.locations[current_location.path] = current_location;
+        } else if (token == "client_max_body_size") {
+            std::string size_str;
+            iss >> size_str;
+            server.client_max_body_size = parseSize(size_str);
+        } else if (token == "location") {
+			std::string path;
+			iss >> path;
+            server.locations[path] = parseLocationBlock(file);
         } else if (token == "}") {
             break;
         }
     }
 }
 
-void Config::parseLocationBlock(std::ifstream &file, Location &location) {
+Location Config::parseLocationBlock(std::ifstream &file) {
     std::string line;
+	Location location;
+
 
     while (std::getline(file, line)) {
         std::istringstream iss(line);
@@ -120,12 +153,18 @@ void Config::parseLocationBlock(std::ifstream &file, Location &location) {
         } else if (token == "autoindex") {
             std::string value;
             iss >> value;
-            location.autoindex = (value == "on");
+            location.autoindex = (value == "on;");
         } else if (token == "}") {
-            break;
+            return location;
         }
     }
+	return location;
 }
+
+// ------------------------------------------------------
+// 					Print Config File
+// ------------------------------------------------------
+
 
 void Config::printConfig() const {
     for (std::vector<ServerConfig>::const_iterator it = _servers.begin(); it != _servers.end(); ++it) {
@@ -139,21 +178,28 @@ void Config::printConfig() const {
         std::cout << "Server name: " << server.server_name << std::endl;
         std::cout << "Root directory: " << server.root << std::endl;
         std::cout << "Index file: " << server.index << std::endl;
-        std::cout << "Error page: " << server.error_page << std::endl;
+        std::cout << "Error pages: " << std::endl;
+        for (std::map<int, std::string>::const_iterator ep_it = server.error_pages.begin(); ep_it != server.error_pages.end(); ++ep_it) {
+            std::cout << "\t" << ep_it->first << ": " << ep_it->second << std::endl;
+        }
         std::cout << "Max body size: " << server.client_max_body_size << " bytes" << std::endl;
 
         for (std::map<std::string, Location>::const_iterator loc_it = server.locations.begin(); loc_it != server.locations.end(); ++loc_it) {
             const Location& loc = loc_it->second;
-            std::cout << "Location path: " << loc.path << std::endl;
-            std::cout << "Allowed methods: ";
+            std::cout << "Location path: " << loc_it->first << std::endl;
+            std::cout << "\tAllowed methods: ";
             for (std::vector<std::string>::const_iterator method_it = loc.allow_methods.begin(); method_it != loc.allow_methods.end(); ++method_it) {
                 std::cout << *method_it << " ";
             }
             std::cout << std::endl;
-            std::cout << "Root: " << loc.root << std::endl;
-            std::cout << "Upload store: " << loc.upload_store << std::endl;
-            std::cout << "CGI pass: " << loc.cgi_pass << std::endl;
-            std::cout << "Autoindex: " << (loc.autoindex ? "on" : "off") << std::endl;
+			if (!loc.root.empty())
+            	std::cout << "\tRoot: " << loc.root << std::endl;
+			if (!loc.upload_store.empty())
+            	std::cout << "\tUpload store: " << loc.upload_store << std::endl;
+			if (!loc.cgi_pass.empty())
+            	std::cout << "\tCGI pass: " << loc.cgi_pass << std::endl;
+			if (loc.autoindex) 
+            	std::cout << "\tAutoindex: on" << std::endl;
         }
     }
 }
@@ -162,9 +208,16 @@ void Config::parseConfigFile(const std::string &filename) {
 		loadFromFile(filename);
 		if (DEBUG) {
 			std::cout << GRN << "Config file parsed successfully" << RST << std::endl;
+			std::cout << BLU << "----------------------------- << Config << -----------------------------" << std::endl;
 			printConfig();
+			std::cout << "------------------------------------------------------------------------"<< RST << std::endl;
 		}
 }
+
+// ------------------------------------------------------
+// 					Getters
+// ------------------------------------------------------
+
 
 const std::vector<ServerConfig>& Config::getServers() const {
     return _servers;

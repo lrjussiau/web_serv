@@ -9,7 +9,7 @@ OBJDIR = .objFiles
 SRCDIR = src
 INCDIR = inc
 
-FILES		= main Config Utils #Client Server Supervisor
+FILES		= main Config Utils Client #Server Supervisor
 SRC			= $(addprefix $(SRCDIR)/, $(FILES:=.cpp))
 OBJ			= $(addprefix $(OBJDIR)/, $(FILES:=.o))
 HEADER		= $(addprefix $(INCDIR)/, Config.hpp WebServ.hpp Utils.hpp Client.hpp Server.hpp Supervisor.hpp)

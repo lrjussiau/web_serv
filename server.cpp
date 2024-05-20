@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #define PORT 4242  // le port de notre serveur
+#define IP "127.0.0.1"
 
 int create_server_socket(void);
 void accept_new_connection(int listener_socket, fd_set *all_sockets, int *fd_max);
@@ -109,7 +110,7 @@ int create_server_socket(const char *ip) {
     printf("[Server] Created server socket fd: %d\n", socket_fd);
 
     // Liaison de la socket à l'adresse et au port
-    if (bind(socket_fd, (struct sockaddr *)&sa, sizeof sa);) {
+    if (bind(socket_fd, (struct sockaddr *)&sa, sizeof sa)) {
         fprintf(stderr, "[Server] Bind error: %s\n", strerror(errno));
         return (-1);
     }
