@@ -26,4 +26,9 @@ int	Client::getServerSocket(void) const{
 	return this->_server_socket;
 }
 
-//void	set(char buffer){}
+void	set(char *buffer){
+	//hardcoder
+	std::string str = buffer;
+
+	std::cout << str << std::endl;
+}

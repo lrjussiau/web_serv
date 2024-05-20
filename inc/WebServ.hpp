@@ -28,6 +28,12 @@
 #include <sstream>
 
 #include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/select.h>
+#include <sys/time.h>
+#include <sys/types.h>
+ #include <unistd.h>
 
 #include "Config.hpp"
 #include "Utils.hpp"

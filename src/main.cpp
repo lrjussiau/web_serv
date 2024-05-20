@@ -10,4 +10,5 @@ int main(int argc, char **argv) {
     } catch (const Except& e) {
         std::cout << RED << "Caught an exception: " << e.what() << RST << std::endl;
     }
+	
 }

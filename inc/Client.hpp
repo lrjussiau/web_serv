@@ -1,6 +1,7 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include "WebServ.hpp"
 
 class Client {
 
@@ -23,7 +24,7 @@ class Client {
 		//Client &operator=(const Client& src);
 
 		//louis parsing + assignation private attrinute
-		//void	set(char buffer);
+		void	set(char buffer);
 };
 
 #endif
