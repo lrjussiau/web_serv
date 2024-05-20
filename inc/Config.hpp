@@ -33,6 +33,8 @@ class Config {
 		void		loadFromFile(const std::string &filename);
 		void		printConfig() const;
 		int			parseSize(const std::string &size_str);
+        void        checkConfig() const;
+        bool        checkIpv4(ServerConfig &server) const;
 
     public:
 		Config();

@@ -204,6 +204,92 @@ void Config::printConfig() const {
     }
 }
 
+// ------------------------------------------------------
+// 					 Check Config
+// ------------------------------------------------------
+
+bool Config::checkIpv4(ServerConfig &server) const {
+    std::vector<std::string> octets;
+    std::string octet;
+    std::istringstream iss(server.server_name);
+    while (std::getline(iss, octet, '.')) {
+        octets.push_back(octet);
+    }
+    if (octets.size() != 4) {
+        return false;
+    }
+    for (std::vector<std::string>::const_iterator it = octets.begin(); it != octets.end(); ++it) {
+        if (it->size() > 3) {
+            return false;
+        }
+        for (std::string::const_iterator c = it->begin(); c != it->end(); ++c) {
+            if (!std::isdigit(*c) && *c != ';'){
+                return false;
+            }
+        }
+        if (it->empty() || (it->back() == ';' && it->size() == 1)) {
+            return false;
+        }
+        int octet = std::stoi(*it);
+        if (octet < 0 || octet > 255) {
+            return false;
+        }
+    }
+    return true;
+}
+
+void Config::checkConfig() const {
+    for (std::vector<ServerConfig>::const_iterator it = _servers.begin(); it != _servers.end(); ++it) {
+        ServerConfig server = *it;
+        for (std::vector<int>::const_iterator port_it = server.listen_ports.begin(); port_it != server.listen_ports.end(); ++port_it) {
+            if (*port_it == 0) {
+                throw Except("Invalid port number: You have to specify a port number");
+            }
+            if (*port_it < 0 || *port_it > 65535) {
+                throw Except("Invalid port number: " + std::to_string(*port_it));
+            }
+        }
+        if (server.server_name.empty()) {
+            throw Except("Server block missing server_name directive");
+        }
+        if (checkIpv4(server)) {
+            server.is_ipv4 = true;
+        }
+        
+        if (server.root.empty()) {
+            throw Except("Server block missing root directive");
+        }
+        if (server.index.empty()) {
+            throw Except("Server block missing index directive");
+        }
+        if (server.error_pages.empty()) {
+            throw Except("Server block missing error_page directive");
+        }
+        if (server.client_max_body_size == 0) {
+            throw Except("Server block missing client_max_body_size directive");
+        }
+        // for (std::map<std::string, Location>::const_iterator loc_it = server.locations.begin(); loc_it != server.locations.end(); ++loc_it) {
+        //     const Location& loc = loc_it->second;
+        //     if (loc.allow_methods.empty()) {
+        //         throw Except("Location block missing allow_methods directive");
+        //     }
+        //     if (loc.root.empty()) {
+        //         throw Except("Location block missing root directive");
+        //     }
+        //     if (loc.upload_store.empty()) {
+        //         throw Except("Location block missing upload_store directive");
+        //     }
+        //     if (loc.cgi_pass.empty()) {
+        //         throw Except("Location block missing cgi_pass directive");
+        //     }
+        // }
+    }
+}
+
+// ------------------------------------------------------
+// 					 Run Config
+// ------------------------------------------------------
+
 void Config::parseConfigFile(const std::string &filename) {
 		loadFromFile(filename);
 		if (DEBUG) {
@@ -212,10 +298,11 @@ void Config::parseConfigFile(const std::string &filename) {
 			printConfig();
 			std::cout << "------------------------------------------------------------------------"<< RST << std::endl;
 		}
+        checkConfig();
 }
 
 // ------------------------------------------------------
-// 					Getters
+// 					    Getters
 // ------------------------------------------------------
 
 

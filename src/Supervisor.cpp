@@ -142,6 +142,7 @@ void	Supervisor::manageOperations(void){
 void Supervisor::readRequestFromClient(int client_socket){
     char buffer[BUFSIZ];
     int bytes_read;
+    // int status;
 
     memset(&buffer, '\0', sizeof buffer);
     bytes_read = recv(client_socket, &buffer, BUFSIZ, 0);
@@ -163,7 +164,7 @@ void Supervisor::readRequestFromClient(int client_socket){
 
 /*void	Supervisor::writeResponseToClient(int client_socket){
 	Client client = this->_clients_map[client_socket];
-	Server *server = this->_servers_map[client.getServerSocket()];
+	// Server *server = this->_servers_map[client.getServerSocket()];
 	//Response response = buildResponse(client);
 
 	//recup client avec sa socket -> examiner sa requete->renvoyer la reponse adequate->msg_to_send = content + http_response class
