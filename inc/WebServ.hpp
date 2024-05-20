@@ -39,6 +39,8 @@
 #include "Config.hpp"
 #include "Utils.hpp"
 #include "Client.hpp"
+#include "Server.hpp"
+#include "Supervisor.hpp"
 
 
 #endif

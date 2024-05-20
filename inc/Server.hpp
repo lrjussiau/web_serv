@@ -2,8 +2,7 @@
 #define SERVER_HPP
 
 #include "Config.hpp"
-#include "Client.hpp"
-
+struct ServerConfig;
 // split server launch?
 class Server {
 
@@ -24,7 +23,7 @@ class Server {
 		void						addClient(int client_socket, int server_socket);
 		void						setClient(int client_socket, char buffer);*/
 		void						createServer(ServerConfig server_config);
-		int							launchSocket(uint16_t port, std::string ip, bool IPv4);
+		int							launchSocket(unsigned port, std::string ip, bool IPv4);
 };
 
 class ServerSocketError : public std::exception {

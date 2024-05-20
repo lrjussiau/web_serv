@@ -2,6 +2,13 @@
 #define SUPERVISOR_HPP
 
 #include "Server.hpp"
+#include "Config.hpp"
+#include "Client.hpp"
+
+class Client;
+class Config;
+struct ServerConfig;
+class Server;
 
 //->modify socket from unsigned int(can't check if < 0) to int
 //manage deletion/adding of fd in the while loop or outside?
@@ -28,11 +35,12 @@ class Supervisor {
 		void	fdSetAdd(int socket_fd);
 		void	fdSetRemove(int socket_fd);
 		int		isServer(int socket_fd) const;
+		void	buildServers(Config configuration);
 		void	addServer(ServerConfig server_config);
 		void	removeServer(int fd);
 		void	acceptNewConnection(int server_socket);
 		void	readRequestFromClient(int client_socket);
-		void	writeResponseToClient(int client_socket);
+		//void	writeResponseToClient(int client_socket);
 		void	manageOperations(void);
 		/*Server	getServer()*/
 };

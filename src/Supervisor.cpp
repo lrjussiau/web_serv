@@ -47,7 +47,7 @@ void	Supervisor::fdSetRemove(int socket_fd){
 }
 
 int		Supervisor::isServer(int socket_fd) const{
-	std::map<int, Server*>::iterator	it;
+	std::map<int, Server*>::const_iterator it;
 
 	it = this->_servers_map.find(socket_fd);
 	if (it == this->_servers_map.end())
@@ -127,7 +127,7 @@ void	Supervisor::manageOperations(void){
 				}
 				else {
 					// La socket client est prete a recevoit une reponse->recuperer information du client->send response
-					writeResponseToClient(fd);
+					//writeResponseToClient(fd);
 					
 				}
 			}
@@ -142,7 +142,6 @@ void	Supervisor::manageOperations(void){
 void Supervisor::readRequestFromClient(int client_socket){
     char buffer[BUFSIZ];
     int bytes_read;
-    int status;
 
     memset(&buffer, '\0', sizeof buffer);
     bytes_read = recv(client_socket, &buffer, BUFSIZ, 0);
@@ -158,20 +157,33 @@ void Supervisor::readRequestFromClient(int client_socket){
     }
     else {
         // Louis -> parsing 
-		this->_clients_map[client_socket].set(buffer);
+		this->_clients_map[client_socket].setData(buffer);
     }
 }
 
-void	Supervisor::writeResponseToClient(int client_socket){
+/*void	Supervisor::writeResponseToClient(int client_socket){
 	Client client = this->_clients_map[client_socket];
 	Server *server = this->_servers_map[client.getServerSocket()];
 	//Response response = buildResponse(client);
 
 	//recup client avec sa socket -> examiner sa requete->renvoyer la reponse adequate->msg_to_send = content + http_response class
-	/*send(client_socket, msg_to_send, strlen(msg_to_send), 0);
+	send(client_socket, msg_to_send, strlen(msg_to_send), 0);
 	if (status == -1) {
 		fprintf(stderr, "[Server] Send error to client fd %d: %s\n", j, strerror(errno));
-	}*/
+	}
 
+}*/
+
+void	Supervisor::buildServers(Config configuration){
+	std::vector<ServerConfig> servers;
+	//ServerConfig server;
+
+	servers = configuration.getServers();
+	for (unsigned long i = 0; i < servers.size(); i++){
+		//server= servers[i];
+		//std::cout <<"  port: "<< server.listen_ports[0] << std::endl;
+		addServer(servers[i]);
+	}
+	return;
 }
 
