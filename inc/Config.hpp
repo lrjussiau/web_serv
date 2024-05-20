@@ -3,51 +3,45 @@
 
 #include "WebServ.hpp"
 
-struct RouteConfig {
-    std::string 				_path;
-    std::string 				_root;
-    std::string 				_default_file;
-    bool 						_directory_listing;
-    std::vector<std::string> 	_allowed_methods;
-    bool 						_cgi_enabled;
-    std::string 				_cgi_handler;
-    std::vector<std::string> 	_file_extensions;
-    bool 						_upload_enabled;
-    std::string					_save_path;
+struct Location {
+    std::string                 path;
+    std::vector<std::string>    allow_methods;
+    std::string                 root;
+    std::string                 upload_store;
+    std::string                 cgi_pass;
+    bool                        autoindex;
 };
 
-/*bool	_is_IPv4;*/
-struct ServerConfig {
-    std::string                 _host;
-    unsigned int                _port;
-    std::string                 _server_name;
-    bool                        _default_server;
-    std::map<int, std::string>  _error_pages;
-    size_t                      _max_body_size;
-    std::vector<RouteConfig>    _routes;
+struct Server {
+    std::vector<int>                listen_ports;
+    std::string                     server_name;
+    bool                            is_ipv4;
+    std::string                     root;
+    std::string                     index;
+    std::string                     error_page;
+    int                             client_max_body_size;
+    std::map<std::string, Location> locations;
 };
-
 
 class Config {
-private:
-    std::vector<ServerConfig> _config;
 
-    void	separateServer(std::string content);
-    void	parseBlock(std::string block);
-    void    printConfig();
-    void    checker();
+    private:
+        std::vector<Server> _servers;
 
-public:
-    Config();
-	virtual ~Config();
-	Config(const Config& src);
-	Config &operator=(const Config& src);
+        void parseServerBlock(std::ifstream &file, Server &server);
+        void parseLocationBlock(std::ifstream &file, Location &location);
+		void loadFromFile(const std::string &filename);
+		void printConfig() const;
 
-    void    parseConfigFile(const std::string& configFile);
+    public:
+		Config();
+		Config(const Config &src);
+		virtual ~Config();
+		Config &operator=(const Config &src);
 
-    std::vector<ServerConfig>   getConfig() const;
+		void parseConfigFile(const std::string &filename);
+        const std::vector<Server>& getServers() const;
+
 };
-
-std::string trim(const std::string& str);
 
 #endif
