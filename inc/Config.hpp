@@ -12,7 +12,7 @@ struct Location {
     bool                        autoindex;
 };
 
-struct Server {
+struct ServerConfig {
     std::vector<int>                listen_ports;
     std::string                     server_name;
     bool                            is_ipv4;
@@ -26,9 +26,9 @@ struct Server {
 class Config {
 
     private:
-        std::vector<Server> _servers;
+        std::vector<ServerConfig> _servers;
 
-        void parseServerBlock(std::ifstream &file, Server &server);
+        void parseServerBlock(std::ifstream &file, ServerConfig &server);
         void parseLocationBlock(std::ifstream &file, Location &location);
 		void loadFromFile(const std::string &filename);
 		void printConfig() const;
@@ -40,7 +40,7 @@ class Config {
 		Config &operator=(const Config &src);
 
 		void parseConfigFile(const std::string &filename);
-        const std::vector<Server>& getServers() const;
+        const std::vector<ServerConfig>& getServers() const;
 
 };
 

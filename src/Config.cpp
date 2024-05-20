@@ -34,7 +34,7 @@ void Config::loadFromFile(const std::string &filename) {
     }
 
     std::string line;
-    Server current_server;
+    ServerConfig current_server;
     bool in_server_block = false;
 
     while (std::getline(file, line)) {
@@ -45,11 +45,11 @@ void Config::loadFromFile(const std::string &filename) {
         if (token == "server") {
             if (in_server_block) {
                 _servers.push_back(current_server);
-                current_server = Server();
+                current_server = ServerConfig();
+				in_server_block = false;
             }
             in_server_block = true;
             parseServerBlock(file, current_server);
-            in_server_block = false;
         }
     }
 
@@ -58,7 +58,7 @@ void Config::loadFromFile(const std::string &filename) {
     }
 }
 
-void Config::parseServerBlock(std::ifstream &file, Server &server) {
+void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
     std::string line;
     bool in_location_block = false;
     Location current_location;
@@ -128,8 +128,8 @@ void Config::parseLocationBlock(std::ifstream &file, Location &location) {
 }
 
 void Config::printConfig() const {
-    for (std::vector<Server>::const_iterator it = _servers.begin(); it != _servers.end(); ++it) {
-        const Server& server = *it;
+    for (std::vector<ServerConfig>::const_iterator it = _servers.begin(); it != _servers.end(); ++it) {
+        const ServerConfig& server = *it;
         std::cout << "Server listening on ports: ";
         for (std::vector<int>::const_iterator port_it = server.listen_ports.begin(); port_it != server.listen_ports.end(); ++port_it) {
             std::cout << *port_it << " ";
@@ -161,11 +161,11 @@ void Config::printConfig() const {
 void Config::parseConfigFile(const std::string &filename) {
 		loadFromFile(filename);
 		if (DEBUG) {
-			std::cout << GRN << "Config file parsed successfully" << CLR << std::endl;
+			std::cout << GRN << "Config file parsed successfully" << RST << std::endl;
 			printConfig();
 		}
 }
 
-const std::vector<Server>& Config::getServers() const {
+const std::vector<ServerConfig>& Config::getServers() const {
     return _servers;
 }
