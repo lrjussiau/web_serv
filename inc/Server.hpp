@@ -9,7 +9,7 @@ class Server {
 
 	private:
 		std::vector<int>			_sockets;
-		std::map<int, Client>		_clients;
+		//std::map<int, Client>		_clients;
 
 	public:
 		Server(void);
@@ -18,13 +18,13 @@ class Server {
 		Server &operator=(const Server& src);
 
 
-		std::vector<int>	getSockets(void) const;
-		std::vector<int>	getClients(void) const;
-		Client				getClient(int socket_client) const;
-		void				addClient(int client_socket, int server_socket);
-		void				setClient(int client_socket, char buffer);
-		//void				createServer(ServerConfig server_config);
-		int					launchSocket(uint16_t port, const char *ip, bool IPv4);
+		std::vector<int>			getSockets(void) const;
+		/*std::map<int, Client>		getClients(void) const;
+		Client						getClient(int socket_client) const;
+		void						addClient(int client_socket, int server_socket);
+		void						setClient(int client_socket, char buffer);*/
+		void						createServer(ServerConfig server_config);
+		int							launchSocket(uint16_t port, std::string ip, bool IPv4);
 };
 
 class ServerSocketError : public std::exception {
