@@ -30,7 +30,7 @@ Response::Response(void) {
 
 Response::Response(Client client) {
 	std::cout << " Avant init" << std::endl;
-	std::string path_error_page = "../html/error_pages/";
+	std::string path_error_page = "src/html/error_page/";
 
 	if (client.getRequestProtocol() != "HTTP/1.1") {
 		buildStatusLine(505, "HTTP Version Not Supported");
@@ -47,9 +47,9 @@ Response::Response(Client client) {
 	} else if (client.getRequestMethod() != "GET" && client.getRequestMethod() != "POST") {
 		buildStatusLine(405, "Method Not Allowed");
 		createContent(path_error_page + "405.html");
-	// } else if () {																			// Look For File
-	// 	buildStatusLine(404, "Not Found");
-	//  createContent( path_error_page + "404.html");
+	} else if (!is_file_exist(client.getRequestedUrl())) {																			// Look For File
+		buildStatusLine(404, "Not Found");
+		createContent( path_error_page + "404.html");
 	} else if (client.getRequestMethod() == "POST") {
 		buildStatusLine(201, "OK");
 			//createContent();
@@ -57,6 +57,8 @@ Response::Response(Client client) {
 		buildStatusLine(200, "OK");
 		if (client.getRequestedUrl() == "/")
 			createContent("src/html/index.html");
+		else if (client.getRequestedUrl() != "/favicon.ico")
+			createContent("src/html" + client.getRequestedUrl());
 	} else {
 		buildStatusLine(400, "BAD REQUEST");
 		createContent( path_error_page + "400.html");
@@ -79,7 +81,6 @@ void Response::buildStatusLine(int status_code, std::string status_message) {
 }
 
 void Response::createContent(std::string path) {
-	std::cout << path << std::endl;
 	std::ifstream file(path);
 	std::string line;
 
@@ -113,4 +114,14 @@ void Response::init_headers(void) {
 
 std::string	Response::getFinalReply(void) const{
 	return this->_final_reply;
+}
+
+bool	Response::is_file_exist(const std::string& path) {
+	std::ifstream file("src/html/" + path);
+	if (file.is_open()) {
+		file.close();
+		return true;
+	} else {
+		return false;
+	}
 }

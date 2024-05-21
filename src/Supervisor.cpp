@@ -56,7 +56,6 @@ int		Supervisor::isServer(int socket_fd) const{
 void	Supervisor::addServer(ServerConfig server_config){
 	Server 				new_server;
 	std::vector<int>	new_server_sockets;
-
 	new_server.createServer(server_config);
 	new_server_sockets = new_server.getSockets();
 	for (unsigned long i = 0; i < new_server_sockets.size(); i++){

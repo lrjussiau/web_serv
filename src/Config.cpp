@@ -104,6 +104,9 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
             }
         } else if (token == "server_name") {
             iss >> server.server_name;
+            if (checkIpv4(server)) {
+                server.is_ipv4 = true;
+            }
         } else if (token == "root") {
             iss >> server.root;
         } else if (token == "index") {
@@ -253,10 +256,6 @@ void Config::checkConfig() const {
         if (server.server_name.empty()) {
             throw Except("Server block missing server_name directive");
         }
-        if (checkIpv4(server)) {
-            server.is_ipv4 = true;
-        }
-        
         if (server.root.empty()) {
             throw Except("Server block missing root directive");
         }
