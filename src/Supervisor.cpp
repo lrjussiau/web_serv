@@ -174,7 +174,8 @@ void Supervisor::readRequestFromClient(int client_socket){
 /*void	Supervisor::writeResponseToClient(int client_socket){
 	Client client = this->_clients_map[client_socket];
 	// Server *server = this->_servers_map[client.getServerSocket()];
-	//Response response = buildResponse(client);
+	//Response response(client);
+	//response.get_
 
 	//recup client avec sa socket -> examiner sa requete->renvoyer la reponse adequate->msg_to_send = content + http_response class
 	send(client_socket, msg_to_send, strlen(msg_to_send), 0);

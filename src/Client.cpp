@@ -41,6 +41,9 @@ void Client::setData(char *buffer){
 	std::string buffer_str(buffer);
 	std::string line;
 	std::istringstream buffer_stream(buffer_str);
+	// if (DEBUG) {
+	// 	std::cout << YEL << "Client Request:" << std::endl;
+	// }
 	while(std::getline(buffer_stream, line)){
 		if (line.find("Host:") != std::string::npos){
 			this->_requestHost = line.substr(6);
@@ -49,7 +52,11 @@ void Client::setData(char *buffer){
 			std::istringstream line_stream(line);
 			line_stream >> this->_requestMethod >> this->_requestedUrl >> this->_requestProtocol;
 		}
+		// 	if (DEBUG) {
+		// 	std::cout << line << std::endl;
+		// }
 	}
+	// std::cout << RST << std::endl;
 	if (DEBUG) {
 		std::cout << YEL << "Client Request:" << std::endl;
 		std::cout << "Request Host: " << this->_requestHost << std::endl;
