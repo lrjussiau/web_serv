@@ -41,6 +41,7 @@
 #include "Client.hpp"
 #include "Server.hpp"
 #include "Supervisor.hpp"
+#include "Response.hpp"
 
 
 #endif

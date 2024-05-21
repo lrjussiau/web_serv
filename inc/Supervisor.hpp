@@ -11,6 +11,7 @@ class Config;
 struct ServerConfig;
 class Server;
 
+
 //->modify socket from unsigned int(can't check if < 0) to int
 //manage deletion/adding of fd in the while loop or outside?
 
@@ -38,7 +39,7 @@ class Supervisor {
 		void	buildServers(Config configuration);
 		void	addServer(ServerConfig server_config);
 		void	removeServer(int fd);
-		void	removeClient(int fd);
+		//void	removeClient(int fd);
 		void	acceptNewConnection(int server_socket);
 		void	readRequestFromClient(int client_socket);
 		void	writeResponseToClient(int client_socket);

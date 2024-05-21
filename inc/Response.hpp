@@ -18,7 +18,7 @@ class Response {
 
 	public:
 		Response(void);
-		Response(Client client, Server server);
+		Response(Client client);
 		~Response(void);
 		Response(const Response& src);
 

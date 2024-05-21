@@ -62,6 +62,6 @@ int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
         throw ServerListeningError();
     }
 	if (DEBUG)
-		printf("[Server] Created server socket fd: %d\n at ip:port : %s:%d ", server_socket, ip, port);
+		std::cout << "[Server] Created server socket fd: " << server_socket << "at ip:port : " << ip << port << std::endl;
 	return (0);
 }

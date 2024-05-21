@@ -68,9 +68,7 @@ void	Supervisor::addServer(ServerConfig server_config){
 	return;
 }
 
-void	Supervisor::removeClients(int server_socket){
-
-}
+//void	Supervisor::removeClients(int server_socket){}
 //remove server_socket -> manque remove clients + s the server really destrozyed?
 void	Supervisor::removeServer(int server_socket){
 	Server								*server = this->_servers_map[server_socket];
@@ -81,9 +79,7 @@ void	Supervisor::removeServer(int server_socket){
 		fdSetRemove(server_sockets[i]);
 		it = this->_servers_map.find(server_sockets[i]);
 		this->_servers_map.erase(it);
-		removeClients(
-		
-		)
+		//removeClients()
 		close(server_sockets[i]);
 	}
 	return;
@@ -99,7 +95,8 @@ void Supervisor::acceptNewConnection(int server_socket){
         return ;
     }
     FD_SET(client_socket, &(this->_read_fds));
-    this->_all_sockets.insert(new_fd);
+	FD_SET(client_socket, &(this->_all_sockets));
+    //this->_all_sockets.insert(new_fd);
 	this->_clients_map[client_socket] = new_client;
 	this->_fd_max = findFdMax(this->_all_sockets);
 	//this->_servers_map[server_socket]->addClient(client_socket, server_socket);
@@ -113,9 +110,9 @@ void Supervisor::acceptNewConnection(int server_socket){
 void	Supervisor::manageOperations(void){
 	while (1) {
 		this->_read_fds = this->_all_sockets;
-		this->_write_fds = this->_all_sockets;
-		this->_excep_fds = this->_all_sockets;
-        if (select(this->_fd_max + 1, &(this->_read_fds), NULL, NULL, &(this->_timer)) == -1) {
+		//this->_write_fds = this->_all_sockets;
+		//this->_excep_fds = this->_all_sockets;
+        if (select(this->_fd_max + 1, &(this->_read_fds), &(this->_write_fds), NULL, &(this->_timer)) == -1) {
             fprintf(stderr, "[Server] Select error: %s\n", strerror(errno));
             exit(1);
         }
@@ -140,13 +137,13 @@ void	Supervisor::manageOperations(void){
 				else {
 					if (DEBUG)
 						std::cout << "[Client:" << fd << "] A client is ready to receive a response" << std::endl;
-					//writeResponseToClient(fd);
+					writeResponseToClient(fd);
 					
 				}
 			}
-			if (FD_ISSET(fd, &(this->_excep_fds)) != 0){
+			/*if (FD_ISSET(fd, &(this->_excep_fds)) != 0){
 				std::cout << "[ERROR] An fd has been placed in the exception set by select" << std::endl;
-			}
+			}*/
 		}
 	}
 	return;
@@ -170,6 +167,9 @@ void Supervisor::readRequestFromClient(int client_socket){
 		close(client_socket);
     }
     else {
+		//std::cout << "here" << std::endl;
+		FD_SET(client_socket, &(this->_write_fds));
+		FD_CLR(client_socket, &(this->_read_fds));
 		this->_clients_map[client_socket].setData(buffer);
     }
 }
@@ -179,9 +179,11 @@ void	Supervisor::writeResponseToClient(int client_socket){
 	Response response(client);
 
 	//recup client avec sa socket -> examiner sa requete->renvoyer la reponse adequate->msg_to_send = content + http_response class
-	if (send(client_socket, client.getFinalReply(), client.getFinalReply().length(), MSG_DONTWAIT)){
-		fprintf(stderr, "[Server] Send error to client fd %d: %s\n", j, strerror(errno));
+	FD_CLR(client_socket, &(this->_write_fds));
+	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT)){
+		fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
 	}
+	std::cout << "successfully sent response" << std::endl; 
 
 }
 
