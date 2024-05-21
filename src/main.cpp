@@ -9,6 +9,7 @@ int main(int argc, char **argv) {
         Supervisor supervisor;
 		Test.parseConfigFile(argv[1]);
         supervisor.buildServers(Test);
+        supervisor.manageOperations();
     } catch (const Except& e) {
         std::cout << RED << "Caught an exception: " << e.what() << RST << std::endl;
     }

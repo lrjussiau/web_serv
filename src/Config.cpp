@@ -99,8 +99,9 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
 
         if (token == "listen") {
             int port;
-            iss >> port;
-            server.listen_ports.push_back(port);
+            while (iss >> port) {
+                server.listen_ports.push_back(port);
+            }
         } else if (token == "server_name") {
             iss >> server.server_name;
         } else if (token == "root") {

@@ -27,6 +27,7 @@ Supervisor::Supervisor(void){
 	FD_ZERO(&(this->_write_fds));
 	this->_timer.tv_sec = 2;
     this->_timer.tv_usec = 0;
+	this->_fd_max = findFdMax(this->_all_sockets);
 }
 
 void	Supervisor::fdSetAdd(int socket_fd){
@@ -104,8 +105,15 @@ void Supervisor::acceptNewConnection(int server_socket){
 }
 
 void	Supervisor::manageOperations(void){
+	//std::cout << " fdmax: " << this->_fd_max <<std::endl;
+	//std::cout << " t: " << this->_timer.tv_sec <<std::endl;
+	//std::cout << " t: " << this->_timer.tv_usec <<std::endl;
+
 	while (1) {
-        if (select(this->_fd_max + 1, &(this->_read_fds), &(this->_write_fds), &(this->_excep_fds), &(this->_timer))) {
+		this->_read_fds = this->_all_sockets;
+		this->_write_fds = this->_all_sockets;
+		this->_excep_fds = this->_all_sockets;
+        if (select(this->_fd_max + 1, &(this->_read_fds), NULL, NULL, &(this->_timer)) == -1) {
             fprintf(stderr, "[Server] Select error: %s\n", strerror(errno));
             exit(1);
         }
@@ -114,14 +122,16 @@ void	Supervisor::manageOperations(void){
 			if (FD_ISSET(fd, &(this->_read_fds)) != 0) {
 				if (isServer(fd)) {
 					// La socket est une socket serveur qui écoute le port->ajouter un client
+					std::cout << "A connection is made" << std::endl;
 					acceptNewConnection(fd);
 				}
 				else {
+					std::cout << "bite" << std::endl;
 					// La socket est une socket client, on va la lire/parser/ajouter les info au client du serveur correspondant
 					readRequestFromClient(fd);
 				}
 			}
-			if (FD_ISSET(fd, &(this->_write_fds)) != 0) {
+			/*if (FD_ISSET(fd, &(this->_write_fds)) != 0) {
 				if (isServer(fd)) {
 					//error server socket 
 				}
@@ -133,7 +143,7 @@ void	Supervisor::manageOperations(void){
 			}
 			if (FD_ISSET(fd, &(this->_excep_fds)) != 0){
 				//error
-			}
+			}*/
 		}
 	}
 	return;
@@ -177,12 +187,12 @@ void Supervisor::readRequestFromClient(int client_socket){
 
 void	Supervisor::buildServers(Config configuration){
 	std::vector<ServerConfig> servers;
-	//ServerConfig server;
+	ServerConfig server;
 
 	servers = configuration.getServers();
 	for (unsigned long i = 0; i < servers.size(); i++){
-		//server= servers[i];
-		//std::cout <<"  port: "<< server.listen_ports[0] << std::endl;
+		server= servers[i];
+		//std::cout <<"  port bite: "<< server.listen_ports[1] << std::endl;
 		addServer(servers[i]);
 	}
 	return;

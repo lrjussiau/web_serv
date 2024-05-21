@@ -29,8 +29,10 @@ std::vector<int>	Server::getSockets(void) const{
 }
 
 void	Server::createServer(ServerConfig server_config){
-	for (size_t i = 0; i < server_config.listen_ports.size(); ++i) {
+	for (size_t i = 0; i <= server_config.listen_ports.size(); i++) {
+		//std::cout << "  pppport: "<<server_config.listen_ports[i] << std::endl;
 		launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_ipv4);
+		std::cout << "hello" << std::endl;
 		/*catch (const std::exception& e){
         	std::cerr << e.what() << std::endl;
 		}*/
@@ -42,6 +44,7 @@ int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
 	struct sockaddr_in sa;
 	int					server_socket;
 
+	std::cout << "  port: "<< port << std::endl;
     // Préparaton de l'adresse et du port pour la socket de notre serveur
     memset(&sa, 0, sizeof sa);
 	if (IPv4 == false){
@@ -56,7 +59,7 @@ int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
     sa.sin_port = htons(port);
     // Création de la socket
 	server_socket = socket(sa.sin_family, SOCK_STREAM, 0);
-	std::cout << "server socket"<< server_socket << "  port: "<< sa.sin_port << std::endl;
+	std::cout << "server socket"<< server_socket << "  port: "<< port << std::endl;
     this->_sockets.push_back(server_socket);
     if (server_socket == -1) {
         throw ServerSocketError();

@@ -1,9 +1,10 @@
 #ifndef SUPERVISOR_HPP
 #define SUPERVISOR_HPP
 
-#include "Server.hpp"
+/*#include "Server.hpp"
 #include "Config.hpp"
-#include "Client.hpp"
+#include "Client.hpp"*/
+#include "WebServ.hpp"
 
 class Client;
 class Config;
