@@ -1,4 +1,7 @@
 #include "../inc/WebServ.hpp"
+#include "../inc/Config.hpp"
+#include "../inc/Utils.hpp"
+#include "../inc/Supervisor.hpp"
 
 int main(int argc, char **argv) {
 

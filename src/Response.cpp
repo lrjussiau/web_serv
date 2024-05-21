@@ -1,11 +1,5 @@
 #include "../inc/Response.hpp"
 
-/*HTTP/1.1 200 OK\r\n
-Content-Type: text/html\r\n
-Content-Length: 19\r\n
-\r\n
-<html>hello</html>*/
-
 void 		Response::buildResponse(void){
 	std::string	final_reply;
 
@@ -28,14 +22,13 @@ Response::Response(void) {
 
 // 200 - 201 - 400 - 404 - 405 - 408 - 413 - 500 - 505
 
-Response::Response(Client client) {
-	std::cout << " Avant init" << std::endl;
+Response::Response(Client client, ServerConfig server) {
+	std::cout << server.server_name << std::endl;
 	std::string path_error_page = "src/html/error_page/";
-
 	if (client.getRequestProtocol() != "HTTP/1.1") {
 		buildStatusLine(505, "HTTP Version Not Supported");
 		createContent( path_error_page + "505.html");
-	// } else if (client.getRequestHost() != server.getServerName()) {							// Add Server Name				
+	// } else if (client.getRequestHost() != server.server_name) {							// Add Server Name				
 	// 	buildStatusLine(500, "Internal Server");
 	//  createContent( path_error_page + "500.html");
 	// } else if () {																			// Look For Content-Length

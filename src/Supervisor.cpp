@@ -61,7 +61,9 @@ void	Supervisor::addServer(ServerConfig server_config){
 	for (unsigned long i = 0; i < new_server_sockets.size(); i++){
 		FD_SET(new_server_sockets[i], &(this->_all_sockets));
 		FD_SET(new_server_sockets[i], &(this->_read_fds));
+		this->_fd_max = findFdMax(this->_all_sockets);
 		this->_servers_map[new_server_sockets[i]] = &new_server;
+		std::cout << "[Server] Server socket " << new_server_sockets[i] << " added to the supervisor" << std::endl;
 	}
 	return;
 }
@@ -117,8 +119,8 @@ void Supervisor::acceptNewConnection(int server_socket){
 
 void	Supervisor::manageOperations(void){
 	while (1) {
-		//this->_read_fds = this->_all_sockets;
-		//this->_write_fds = this->_all_sockets;
+		this->_read_fds = this->_all_sockets;
+		this->_write_fds = this->_all_sockets;
 		//this->_excep_fds = this->_all_sockets;
         if (select(this->_fd_max + 1, &(this->_read_fds), &(this->_write_fds), NULL, &(this->_timer)) == -1) {
             fprintf(stderr, "[Server] Select error: %s\n", strerror(errno));
@@ -183,7 +185,8 @@ void Supervisor::readRequestFromClient(int client_socket){
 
 void	Supervisor::writeResponseToClient(int client_socket){
 	Client client = this->_clients_map[client_socket];
-	Response response(client);
+	Server *server = this->_servers_map[client.getServerSocket()];
+	Response response(client, server->getServerConfig());
 
 	FD_SET(client_socket, &(this->_write_fds));
 	FD_CLR(client_socket, &(this->_write_fds));

@@ -2,6 +2,8 @@
 #define RESPONSE_HPP
 
 #include "WebServ.hpp"
+#include "Client.hpp"
+#include "Server.hpp"
 
 class Response {
 
@@ -19,7 +21,7 @@ class Response {
 
 	public:
 		Response(void);
-		Response(Client client);
+		Response(Client client, ServerConfig server);
 		~Response(void);
 		Response(const Response& src);
 

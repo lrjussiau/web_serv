@@ -2,6 +2,7 @@
 #define CONFIG_HPP
 
 #include "WebServ.hpp"
+#include "Utils.hpp"
 
 struct Location {
     std::string                 path;
@@ -35,6 +36,7 @@ class Config {
 		int			parseSize(const std::string &size_str);
         void        checkConfig() const;
         bool        checkIpv4(ServerConfig &server) const;
+        bool        checkIpv6(ServerConfig &server) const;
 
     public:
 		Config();

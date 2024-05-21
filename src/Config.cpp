@@ -106,6 +106,10 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
             iss >> server.server_name;
             if (checkIpv4(server)) {
                 server.is_ipv4 = true;
+            } else {
+                // if (!checkIpv6(server)) {
+                //     throw Except("Invalid server_name: " + server.server_name);
+                // }
             }
         } else if (token == "root") {
             iss >> server.root;
@@ -241,6 +245,63 @@ bool Config::checkIpv4(ServerConfig &server) const {
     }
     return true;
 }
+
+bool isValidHexDigit(char c) {
+    return std::isxdigit(static_cast<unsigned char>(c)) != 0;
+}
+
+bool isValidIPv6Group(const std::string& group) {
+    if (group.empty() || group.length() > 4) {
+        return false;
+    }
+    for (std::size_t i = 0; i < group.length(); ++i) {
+        if (!isValidHexDigit(group[i])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// bool Config::isValidIPv6(const std::string& address) {
+//     std::vector<std::string> groups;
+//     std::string currentGroup;
+//     bool doubleColonFound = false;
+//     std::size_t groupCount = 0;
+
+//     for (std::size_t i = 0; i < address.length(); ++i) {
+//         if (address[i] == ':') {
+//             if (i > 0 && address[i-1] == ':') {
+//                 if (doubleColonFound) {
+//                     return false;  // More than one "::" found
+//                 }
+//                 doubleColonFound = true;
+//                 currentGroup.clear();
+//             } else {
+//                 if (!currentGroup.empty()) {
+//                     if (!isValidIPv6Group(currentGroup)) {
+//                         return false;
+//                     }
+//                     groups.push_back(currentGroup);
+//                     currentGroup.clear();
+//                     ++groupCount;
+//                 }
+//             }
+//         } else {
+//             currentGroup += address[i];
+//         }
+//     }
+//     if (!currentGroup.empty()) {
+//         if (!isValidIPv6Group(currentGroup)) {
+//             return false;
+//         }
+//         groups.push_back(currentGroup);
+//         ++groupCount;
+//     }
+//     if (groupCount > 8 || (groupCount < 8 && !doubleColonFound)) {
+//         return false;
+//     }
+//     return true;
+// }
 
 void Config::checkConfig() const {
     for (std::vector<ServerConfig>::const_iterator it = _servers.begin(); it != _servers.end(); ++it) {

@@ -2,7 +2,8 @@
 #define SERVER_HPP
 
 #include "WebServ.hpp"
-
+#include "Config.hpp"
+#include "Utils.hpp"
 // class Config;
 // struct ServerConfig;
 
@@ -23,6 +24,7 @@ class Server {
 		ServerConfig				getServerConfig(void) const;
 		void						createServer(ServerConfig server_config);
 		int							launchSocket(unsigned port, std::string ip, bool IPv4);
+		
 };
 
 class ServerSocketError : public std::exception {

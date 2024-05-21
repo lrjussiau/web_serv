@@ -1,10 +1,11 @@
 #ifndef SUPERVISOR_HPP
 #define SUPERVISOR_HPP
 
-/*#include "Server.hpp"
+#include "Server.hpp"
 #include "Config.hpp"
-#include "Client.hpp"*/
-#include "WebServ.hpp"
+#include "Client.hpp"
+#include "Response.hpp"
+// #include "WebServ.hpp"
 
 // class Client;
 class Config;
@@ -39,7 +40,7 @@ class Supervisor {
 		void	buildServers(Config configuration);
 		void	addServer(ServerConfig server_config);
 		void	removeServer(int fd);
-		void	removeClient(int server_fd);
+		void	removeClients(int server_fd);
 		void	closeClient(int client_fd);
 		void	acceptNewConnection(int server_socket);
 		void	readRequestFromClient(int client_socket);
