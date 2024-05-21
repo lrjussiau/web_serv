@@ -29,3 +29,12 @@ std::string BlockParser::getNextBlock() {
     }
 	return token;
 }
+
+std::string getTime(){
+	std::time_t currentTime = std::time(0);
+    char buffer[80];
+	std::tm* gmtTime = std::gmtime(&currentTime);
+
+	std::strftime(buffer, 80, "%a, %d %B %Y %H:%M:%S GMT", gmtTime);
+	return std::string (buffer);
+}

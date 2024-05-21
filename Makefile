@@ -12,7 +12,7 @@ INCDIR = inc
 FILES		= main Config Utils Client Server Supervisor Response
 SRC			= $(addprefix $(SRCDIR)/, $(FILES:=.cpp))
 OBJ			= $(addprefix $(OBJDIR)/, $(FILES:=.o))
-HEADER		= $(addprefix $(INCDIR)/, Config.hpp WebServ.hpp Utils.hpp Client.hpp Server.hpp Supervisor.hpp Response.hpp)
+HEADER		= $(addprefix $(INCDIR)/, WebServ.hpp Config.hpp Utils.hpp Client.hpp Server.hpp Supervisor.hpp Response.hpp)
 
 # Colors:
 GREEN		=	\e[92;5;118m

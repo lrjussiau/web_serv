@@ -1,14 +1,17 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "Config.hpp"
-struct ServerConfig;
+#include "WebServ.hpp"
+
+// class Config;
+// struct ServerConfig;
 
 class Server {
 
 	private:
 		std::vector<int>			_sockets;
-
+		ServerConfig				_server_config;
+		
 	public:
 		Server(void);
 		virtual ~Server();
@@ -17,6 +20,7 @@ class Server {
 
 
 		std::vector<int>			getSockets(void) const;
+		ServerConfig				getServerConfig(void) const;
 		void						createServer(ServerConfig server_config);
 		int							launchSocket(unsigned port, std::string ip, bool IPv4);
 };

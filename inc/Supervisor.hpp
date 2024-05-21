@@ -6,10 +6,10 @@
 #include "Client.hpp"*/
 #include "WebServ.hpp"
 
-class Client;
+// class Client;
 class Config;
 struct ServerConfig;
-class Server;
+// class Server;
 
 
 //->modify socket from unsigned int(can't check if < 0) to int
@@ -33,13 +33,14 @@ class Supervisor {
 		Supervisor(const Supervisor& src);
 
 
-		void	fdSetAdd(int socket_fd);
+		//void	fdSetAdd(int socket_fd);
 		void	fdSetRemove(int socket_fd);
 		int		isServer(int socket_fd) const;
 		void	buildServers(Config configuration);
 		void	addServer(ServerConfig server_config);
 		void	removeServer(int fd);
-		//void	removeClient(int fd);
+		void	removeClient(int server_fd);
+		void	closeClient(int client_fd);
 		void	acceptNewConnection(int server_socket);
 		void	readRequestFromClient(int client_socket);
 		void	writeResponseToClient(int client_socket);

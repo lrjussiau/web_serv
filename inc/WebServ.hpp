@@ -34,7 +34,8 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #include <sys/types.h>
- #include <unistd.h>
+#include <unistd.h>
+#include <ctime>
 
 #include "Config.hpp"
 #include "Utils.hpp"
@@ -42,6 +43,5 @@
 #include "Server.hpp"
 #include "Supervisor.hpp"
 #include "Response.hpp"
-
 
 #endif

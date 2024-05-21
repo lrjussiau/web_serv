@@ -24,9 +24,10 @@ std::vector<int>	Server::getSockets(void) const{
 }
 
 void	Server::createServer(ServerConfig server_config){
+	this->_server_config = server_config;
 	for (size_t i = 0; i <= server_config.listen_ports.size(); i++) {
 		launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_ipv4);
-		std::cout << "hello" << std::endl;
+		//std::cout << "hello" << std::endl;
 		/*catch (const std::exception& e){
         	std::cerr << e.what() << std::endl;
 		}*/
@@ -34,6 +35,9 @@ void	Server::createServer(ServerConfig server_config){
 	return;
 }
 
+ServerConfig	Server::getServerConfig(void) const{
+	return this->_server_config;
+}
 //ipv4 a regler
 int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
 	struct sockaddr_in sa;

@@ -26,5 +26,7 @@ public:
     std::string getNextBlock();
 };
 
+std::string getTime(void);
+
 #endif
 

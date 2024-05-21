@@ -29,20 +29,18 @@ Supervisor::Supervisor(void){
 	this->_fd_max = findFdMax(this->_all_sockets);
 }
 
-void	Supervisor::fdSetAdd(int socket_fd){
+/*void	Supervisor::fdSetAdd(int socket_fd){
 	FD_SET(socket_fd, &(this->_all_sockets));
 	FD_SET(socket_fd, &(this->_read_fds));
 	FD_SET(socket_fd, &(this->_write_fds));
-	FD_SET(socket_fd, &(this->_excep_fds));
 	this->_fd_max = findFdMax(this->_all_sockets);
-}
+}*/
 
 void	Supervisor::fdSetRemove(int socket_fd){
 	//close(socket_fd);
 	FD_CLR(socket_fd, &(this->_all_sockets));
 	FD_CLR(socket_fd, &(this->_read_fds));
 	FD_CLR(socket_fd, &(this->_write_fds));
-	FD_CLR(socket_fd, &(this->_excep_fds));
 	this->_fd_max = findFdMax(this->_all_sockets);
 }
 
@@ -62,13 +60,29 @@ void	Supervisor::addServer(ServerConfig server_config){
 	new_server.createServer(server_config);
 	new_server_sockets = new_server.getSockets();
 	for (unsigned long i = 0; i < new_server_sockets.size(); i++){
-		fdSetAdd(new_server_sockets[i]);
+		FD_SET(new_server_sockets[i], &(this->_all_sockets));
+		FD_SET(new_server_sockets[i], &(this->_read_fds));
 		this->_servers_map[new_server_sockets[i]] = &new_server;
 	}
 	return;
 }
 
-//void	Supervisor::removeClients(int server_socket){}
+void	Supervisor::removeClients(int server_socket){
+	for (std::map<int, Client>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
+		if (it->second.getServerSocket() == server_socket){
+			fdSetRemove(it->first);
+			close(it->first);
+			this->_clients_map.erase(it);
+		}
+	}
+}
+
+void	Supervisor::closeClient(int client_socket){
+	std::map<int, Client>::iterator it = this->_clients_map.find(client_socket);
+	this->_clients_map.erase(it);
+	close(client_socket);
+}
+
 //remove server_socket -> manque remove clients + s the server really destrozyed?
 void	Supervisor::removeServer(int server_socket){
 	Server								*server = this->_servers_map[server_socket];
@@ -79,9 +93,10 @@ void	Supervisor::removeServer(int server_socket){
 		fdSetRemove(server_sockets[i]);
 		it = this->_servers_map.find(server_sockets[i]);
 		this->_servers_map.erase(it);
-		//removeClients()
+		removeClients(server_socket);
 		close(server_sockets[i]);
 	}
+	this->_fd_max = findFdMax(this->_all_sockets);
 	return;
 }
 
@@ -96,20 +111,14 @@ void Supervisor::acceptNewConnection(int server_socket){
     }
     FD_SET(client_socket, &(this->_read_fds));
 	FD_SET(client_socket, &(this->_all_sockets));
-    //this->_all_sockets.insert(new_fd);
 	this->_clients_map[client_socket] = new_client;
 	this->_fd_max = findFdMax(this->_all_sockets);
-	//this->_servers_map[server_socket]->addClient(client_socket, server_socket);
     printf("[Server] Accepted new connection on client socket %d.\n", client_socket);
-    //check path otherwise return index.html
-    /*if (send(client_socket, msg_to_send, strlen(msg_to_send), 0) == -1) {
-        fprintf(stderr, "[Server] Send error to client %d: %s\n", client_socket, strerror(errno));
-    }*/
 }
 
 void	Supervisor::manageOperations(void){
 	while (1) {
-		this->_read_fds = this->_all_sockets;
+		//this->_read_fds = this->_all_sockets;
 		//this->_write_fds = this->_all_sockets;
 		//this->_excep_fds = this->_all_sockets;
         if (select(this->_fd_max + 1, &(this->_read_fds), &(this->_write_fds), NULL, &(this->_timer)) == -1) {
@@ -152,7 +161,6 @@ void	Supervisor::manageOperations(void){
 void Supervisor::readRequestFromClient(int client_socket){
     char buffer[BUFSIZ];
     int bytes_read;
-    // int status;
 
     memset(&buffer, '\0', sizeof buffer);
     bytes_read = recv(client_socket, &buffer, BUFSIZ, 0);
@@ -163,11 +171,11 @@ void Supervisor::readRequestFromClient(int client_socket){
         else {
             std::cout << "[Server] Recv error:" << std::endl;;
         }
-        fdSetRemove(client_socket);
-		close(client_socket);
+		FD_CLR(client_socket, &(this->_read_fds));
+		closeClient(client_socket);
+		this->_fd_max = findFdMax(this->_all_sockets);
     }
     else {
-		//std::cout << "here" << std::endl;
 		FD_SET(client_socket, &(this->_write_fds));
 		FD_CLR(client_socket, &(this->_read_fds));
 		this->_clients_map[client_socket].setData(buffer);
@@ -178,7 +186,7 @@ void	Supervisor::writeResponseToClient(int client_socket){
 	Client client = this->_clients_map[client_socket];
 	Response response(client);
 
-	//recup client avec sa socket -> examiner sa requete->renvoyer la reponse adequate->msg_to_send = content + http_response class
+	FD_SET(client_socket, &(this->_write_fds));
 	FD_CLR(client_socket, &(this->_write_fds));
 	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT)){
 		fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
@@ -189,11 +197,9 @@ void	Supervisor::writeResponseToClient(int client_socket){
 
 void	Supervisor::buildServers(Config configuration){
 	std::vector<ServerConfig> servers;
-	ServerConfig server;
 
 	servers = configuration.getServers();
 	for (unsigned long i = 0; i < servers.size(); i++){
-		server = servers[i];
 		addServer(servers[i]);
 	}
 	return;
