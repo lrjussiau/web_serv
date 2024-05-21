@@ -25,6 +25,7 @@ std::vector<int>	Server::getSockets(void) const{
 
 void	Server::createServer(ServerConfig server_config){
 	for (size_t i = 0; i <= server_config.listen_ports.size(); i++) {
+		if (server_config.is_ipv4)
 		launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_ipv4);
 		std::cout << "hello" << std::endl;
 		/*catch (const std::exception& e){
@@ -40,8 +41,7 @@ int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
 	int					server_socket;
 
     memset(&sa, 0, sizeof sa);
-	if (IPv4 == false){
-		//std::cout << "Ipv4"<< std::endl;
+	if (IPv4){
 		inet_pton(AF_INET, ip.c_str(), &sa.sin_addr);
     	sa.sin_family = AF_INET;
 	}

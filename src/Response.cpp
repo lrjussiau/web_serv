@@ -57,6 +57,8 @@ Response::Response(Client client) {
 		buildStatusLine(200, "OK");
 		if (client.getRequestedUrl() == "/")
 			createContent("src/html/index.html");
+		else if (client.getRequestedUrl() != "/favicon.ico")
+			createContent("src/html/" + client.getRequestedUrl());
 	} else {
 		buildStatusLine(400, "BAD REQUEST");
 		createContent( path_error_page + "400.html");
@@ -79,7 +81,6 @@ void Response::buildStatusLine(int status_code, std::string status_message) {
 }
 
 void Response::createContent(std::string path) {
-	std::cout << path << std::endl;
 	std::ifstream file(path);
 	std::string line;
 
