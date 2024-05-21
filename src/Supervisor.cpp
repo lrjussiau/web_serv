@@ -1,6 +1,5 @@
 #include "../inc/Supervisor.hpp"
 
-
 int	findFdMax(fd_set all_sockets) {
 	int	max = 0;
 
