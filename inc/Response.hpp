@@ -6,7 +6,7 @@
 class Response {
 
 	private:
-		int									_response_code;
+		std::string							_status_line;
 		std::map<std::string, std::string>	_headers;
 		std::string							_content;
 		std::string							_final_reply;

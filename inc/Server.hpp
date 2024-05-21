@@ -3,12 +3,11 @@
 
 #include "Config.hpp"
 struct ServerConfig;
-// split server launch?
+
 class Server {
 
 	private:
 		std::vector<int>			_sockets;
-		//std::map<int, Client>		_clients;
 
 	public:
 		Server(void);
@@ -18,10 +17,6 @@ class Server {
 
 
 		std::vector<int>			getSockets(void) const;
-		/*std::map<int, Client>		getClients(void) const;
-		Client						getClient(int socket_client) const;
-		void						addClient(int client_socket, int server_socket);
-		void						setClient(int client_socket, char buffer);*/
 		void						createServer(ServerConfig server_config);
 		int							launchSocket(unsigned port, std::string ip, bool IPv4);
 };

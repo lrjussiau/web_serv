@@ -68,9 +68,12 @@ void	Supervisor::addServer(ServerConfig server_config){
 	return;
 }
 
-//remove server_socket -> manque remove clients
-void	Supervisor::removeServer(int fd){
-	Server								*server = this->_servers_map[fd];
+void	Supervisor::removeClients(int server_socket){
+
+}
+//remove server_socket -> manque remove clients + s the server really destrozyed?
+void	Supervisor::removeServer(int server_socket){
+	Server								*server = this->_servers_map[server_socket];
 	std::vector<int>					server_sockets = server->getSockets();
 	std::map<int, Server*>::iterator	it;
 
@@ -78,6 +81,9 @@ void	Supervisor::removeServer(int fd){
 		fdSetRemove(server_sockets[i]);
 		it = this->_servers_map.find(server_sockets[i]);
 		this->_servers_map.erase(it);
+		removeClients(
+		
+		)
 		close(server_sockets[i]);
 	}
 	return;
@@ -92,7 +98,8 @@ void Supervisor::acceptNewConnection(int server_socket){
         fprintf(stderr, "[Server] Accept error: %s\n", strerror(errno));
         return ;
     }
-    FD_SET(client_socket, &(this->_all_sockets));
+    FD_SET(client_socket, &(this->_read_fds));
+    this->_all_sockets.insert(new_fd);
 	this->_clients_map[client_socket] = new_client;
 	this->_fd_max = findFdMax(this->_all_sockets);
 	//this->_servers_map[server_socket]->addClient(client_socket, server_socket);
@@ -104,10 +111,6 @@ void Supervisor::acceptNewConnection(int server_socket){
 }
 
 void	Supervisor::manageOperations(void){
-	//std::cout << " fdmax: " << this->_fd_max <<std::endl;
-	//std::cout << " t: " << this->_timer.tv_sec <<std::endl;
-	//std::cout << " t: " << this->_timer.tv_usec <<std::endl;
-
 	while (1) {
 		this->_read_fds = this->_all_sockets;
 		this->_write_fds = this->_all_sockets;
@@ -120,29 +123,30 @@ void	Supervisor::manageOperations(void){
 		for (int fd = 0; fd <= this->_fd_max; fd++) {
 			if (FD_ISSET(fd, &(this->_read_fds)) != 0) {
 				if (isServer(fd)) {
-					// La socket est une socket serveur qui écoute le port->ajouter un client
-					std::cout << "A connection is made" << std::endl;
+					if (DEBUG)
+						std::cout << "[Server] A connection with a new client is made" << std::endl;
 					acceptNewConnection(fd);
 				}
 				else {
-					std::cout << "bite" << std::endl;
-					// La socket est une socket client, on va la lire/parser/ajouter les info au client du serveur correspondant
+					if (DEBUG)
+						std::cout << "[Client:" << fd << "] A request has been sent" << std::endl;
 					readRequestFromClient(fd);
 				}
 			}
-			/*if (FD_ISSET(fd, &(this->_write_fds)) != 0) {
+			if (FD_ISSET(fd, &(this->_write_fds)) != 0) {
 				if (isServer(fd)) {
-					//error server socket 
+					std::cout << "[ERROR] Une socket server est ouverte pour lecture" << std::endl;
 				}
 				else {
-					// La socket client est prete a recevoit une reponse->recuperer information du client->send response
+					if (DEBUG)
+						std::cout << "[Client:" << fd << "] A client is ready to receive a response" << std::endl;
 					//writeResponseToClient(fd);
 					
 				}
 			}
 			if (FD_ISSET(fd, &(this->_excep_fds)) != 0){
-				//error
-			}*/
+				std::cout << "[ERROR] An fd has been placed in the exception set by select" << std::endl;
+			}
 		}
 	}
 	return;
@@ -166,24 +170,20 @@ void Supervisor::readRequestFromClient(int client_socket){
 		close(client_socket);
     }
     else {
-        // Louis -> parsing 
 		this->_clients_map[client_socket].setData(buffer);
     }
 }
 
-/*void	Supervisor::writeResponseToClient(int client_socket){
+void	Supervisor::writeResponseToClient(int client_socket){
 	Client client = this->_clients_map[client_socket];
-	// Server *server = this->_servers_map[client.getServerSocket()];
-	//Response response(client);
-	//response.get_
+	Response response(client);
 
 	//recup client avec sa socket -> examiner sa requete->renvoyer la reponse adequate->msg_to_send = content + http_response class
-	send(client_socket, msg_to_send, strlen(msg_to_send), 0);
-	if (status == -1) {
+	if (send(client_socket, client.getFinalReply(), client.getFinalReply().length(), MSG_DONTWAIT)){
 		fprintf(stderr, "[Server] Send error to client fd %d: %s\n", j, strerror(errno));
 	}
 
-}*/
+}
 
 void	Supervisor::buildServers(Config configuration){
 	std::vector<ServerConfig> servers;
@@ -191,8 +191,7 @@ void	Supervisor::buildServers(Config configuration){
 
 	servers = configuration.getServers();
 	for (unsigned long i = 0; i < servers.size(); i++){
-		server= servers[i];
-		//std::cout <<"  port bite: "<< server.listen_ports[1] << std::endl;
+		server = servers[i];
 		addServer(servers[i]);
 	}
 	return;

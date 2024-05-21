@@ -30,7 +30,6 @@ class Supervisor {
 		Supervisor(void);
 		~Supervisor(void);
 		Supervisor(const Supervisor& src);
-		//Supervisor &operator=(const Supervisor& src); ->flemme oblige?
 
 
 		void	fdSetAdd(int socket_fd);
@@ -39,11 +38,11 @@ class Supervisor {
 		void	buildServers(Config configuration);
 		void	addServer(ServerConfig server_config);
 		void	removeServer(int fd);
+		void	removeClient(int fd);
 		void	acceptNewConnection(int server_socket);
 		void	readRequestFromClient(int client_socket);
-		//void	writeResponseToClient(int client_socket);
+		void	writeResponseToClient(int client_socket);
 		void	manageOperations(void);
-		/*Server	getServer()*/
 };
 
 int	findFdMax(fd_set all_sockets);
