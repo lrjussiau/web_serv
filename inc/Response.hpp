@@ -12,10 +12,13 @@ class Response {
 		std::string							_final_reply;
 
 		void 		buildResponse(void);
+		void		buildStatusLine(int status_code, std::string status_message);
+		void 		createContent(std::string path);	
+		void		init_headers(void);
 
 	public:
 		Response(void);
-		Response(Client client);
+		Response(Client client, Server server);
 		~Response(void);
 		Response(const Response& src);
 
