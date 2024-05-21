@@ -6,16 +6,19 @@
 class Response {
 
 	private:
-		int									_response_code;
+		std::string							_status_line;
 		std::map<std::string, std::string>	_headers;
 		std::string							_content;
 		std::string							_final_reply;
 
 		void 		buildResponse(void);
+		void		buildStatusLine(int status_code, std::string status_message);
+		void 		createContent(std::string path);	
+		void		init_headers(void);
 
 	public:
 		Response(void);
-		Response(Client client);
+		Response(Client client, Server server);
 		~Response(void);
 		Response(const Response& src);
 
