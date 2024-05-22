@@ -31,7 +31,7 @@ void	Server::createServer(ServerConfig server_config){
 				launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_ipv4);
 			}
 			catch (std::exception &e){
-        	std::cerr << e.what() << std::endl;
+        	std::cerr << RED << e.what() << std::endl;
 			}
 		}
     }

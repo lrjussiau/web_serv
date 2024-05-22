@@ -1,5 +1,7 @@
 #include "../inc/Supervisor.hpp"
 
+/* a faire: gere les fd set proprement, function pour tout shutdown, rrearranger function/ordre*/
+
 int	findFdMax(fd_set all_sockets) {
 	int	max = 0;
 
@@ -80,7 +82,10 @@ void	Supervisor::removeClients(int server_socket){
 
 void	Supervisor::closeClient(int client_socket){
 	std::map<int, Client>::iterator it = this->_clients_map.find(client_socket);
+
+	FD_CLR(client_socket, &(this->_read_fds));
 	this->_clients_map.erase(it);
+	this->_fd_max = findFdMax(this->_all_sockets);
 	close(client_socket);
 }
 
@@ -172,9 +177,7 @@ void Supervisor::readRequestFromClient(int client_socket){
         else {
             std::cout << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" <<  std::endl;;
         }
-		FD_CLR(client_socket, &(this->_read_fds));
 		closeClient(client_socket);
-		this->_fd_max = findFdMax(this->_all_sockets);
     }
     else {
 		FD_SET(client_socket, &(this->_write_fds));
@@ -190,12 +193,12 @@ void	Supervisor::writeResponseToClient(int client_socket){
 
 	FD_SET(client_socket, &(this->_read_fds));
 	FD_CLR(client_socket, &(this->_write_fds));
-	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT)){
+	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1){
 		std::cout << RED << "[Server "<< client.getServerSocket() << "] Send error to client fd: " << client.getSocket() << std::endl;
 		//fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
 	}
 	else
-		std::cout << "successfully sent response" << GRN <<  std::endl; 
+		std::cout << GRN << "successfully sent response" << GRN <<  std::endl; 
 
 }
 
