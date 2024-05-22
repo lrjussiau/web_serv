@@ -38,6 +38,13 @@ Supervisor::Supervisor(void){
 	this->_fd_max = findFdMax(this->_all_sockets);
 }*/
 
+void	Supervisor::shutdown(void){
+	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
+		removeServer(it->first);
+	}
+	return;
+}
+
 void	Supervisor::fdSetRemove(int socket_fd){
 	//close(socket_fd);
 	FD_CLR(socket_fd, &(this->_all_sockets));
@@ -98,6 +105,7 @@ void	Supervisor::removeServer(int server_socket){
 	for (unsigned long i = 0; i < server_sockets.size(); i++){
 		fdSetRemove(server_sockets[i]);
 		it = this->_servers_map.find(server_sockets[i]);
+		free(it->second);
 		this->_servers_map.erase(it);
 		removeClients(server_socket);
 		close(server_sockets[i]);

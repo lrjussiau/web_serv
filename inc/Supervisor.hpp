@@ -37,6 +37,7 @@ class Supervisor {
 		//void	fdSetAdd(int socket_fd);
 		void	fdSetRemove(int socket_fd);
 		int		isServer(int socket_fd) const;
+		void	shutdown(void);
 		void	buildServers(Config configuration);
 		void	addServer(ServerConfig server_config);
 		void	removeServer(int fd);
