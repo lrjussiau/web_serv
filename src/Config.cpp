@@ -25,8 +25,9 @@ Config &Config::operator=(const Config &src) {
 }
 
 // ------------------------------------------------------
-// 					Parse Config File
+// 					  Utils Functons
 // ------------------------------------------------------
+
 
 int Config::parseSize(const std::string &size_str) {
     std::string numStr;
@@ -57,6 +58,90 @@ int Config::parseSize(const std::string &size_str) {
 	numStr.clear();
     return num;
 }
+
+bool isStringDigit(const std::string& str) {
+    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+        if (!std::isdigit(static_cast<unsigned char>(*it))) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::string get_final_page(std::string page, int code) {
+    std::istringstream iss(page);
+    std::string token;
+    std::vector<std::string> parts;
+    
+    while (std::getline(iss, token, '/')) {
+        parts.push_back(token);
+    }
+    if (!parts.empty()) {
+        std::string& lastPart = parts.back();
+        size_t pos;
+        while ((pos = lastPart.find('x')) != std::string::npos) {
+            lastPart.replace(pos - 2, 3, std::to_string(code));
+        }
+    }
+    std::string final_page;
+    for (size_t i = 0; i < parts.size(); ++i) {
+        if (i != 0) {
+            final_page += '/';
+        }
+        final_page += parts[i];
+    }
+    
+    return final_page;
+}
+
+
+void    Config::parseErrorPage(std::ifstream &file, ServerConfig &server, std::string line) {
+    std::vector<int> error_codes;
+    std::vector<std::string> error_pages;
+    (void)server;
+
+    do {
+        if (line == "")
+            break;
+        std::istringstream iss(line);
+        std::string token;
+        iss >> token;
+        do {
+            if (isStringDigit(token)) {
+                error_codes.push_back(std::stoi(token));
+            } else {
+                error_pages.push_back(token);
+            }
+        } while (iss >> token);
+    } while (std::getline(file, line));
+
+    for (std::vector<std::string>::iterator it = error_pages.begin(); it != error_pages.end(); ++it) {
+        if (it->find("50") != std::string::npos) {
+            for (std::vector<int>::iterator it2 = error_codes.begin(); it2 != error_codes.end(); ++it2) {
+                if (*it2 >= 500 && *it2 <= 599) {
+                    server.error_pages[*it2] = get_final_page(*it, *it2);
+                }
+            }
+        } else if (it->find("40") != std::string::npos) {
+            for (std::vector<int>::iterator it2 = error_codes.begin(); it2 != error_codes.end(); ++it2) {
+                if (*it2 >= 400 && *it2 <= 499) {
+                    server.error_pages[*it2] = *it;
+                }
+            }
+        } else if (it->find("30") != std::string::npos) {
+            for (std::vector<int>::iterator it2 = error_codes.begin(); it2 != error_codes.end(); ++it2) {
+                if (*it2 >= 300 && *it2 <= 399) {
+                    server.error_pages[*it2] = *it;
+                }
+            }
+        }
+    }
+}
+
+// ------------------------------------------------------
+// 					Parse Config File
+// ------------------------------------------------------
+
 
 void Config::loadFromFile(const std::string &filename) {
     std::ifstream file(filename.c_str());
@@ -115,14 +200,8 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
             iss >> server.root;
         } else if (token == "index") {
             iss >> server.index;
-        } else if (token == "error_page" || token == "500" || token == "300" || token == "400") {
-            int error_code;
-			if (token != "error_page") {
-				server.error_pages[std::stoi(token)] = "./src/html/error_page/" + token + ".html";
-			}
-            while (iss >> error_code) {
-                server.error_pages[error_code] = "./src/html/error_page/" + std::to_string(error_code) + ".html";
-            }
+        } else if (token == "error_page") {
+            parseErrorPage(file, server, line);
         } else if (token == "client_max_body_size") {
             std::string size_str;
             iss >> size_str;
@@ -213,7 +292,7 @@ void Config::printConfig() const {
 }
 
 // ------------------------------------------------------
-// 					 Check Config
+// 					 Check IP type
 // ------------------------------------------------------
 
 bool Config::checkIpv4(ServerConfig &server) const {
@@ -303,6 +382,10 @@ bool isValidIPv6Group(const std::string& group) {
 //     return true;
 // }
 
+// ------------------------------------------------------
+// 					 Check Config
+// ------------------------------------------------------
+
 void Config::checkConfig() const {
     for (std::vector<ServerConfig>::const_iterator it = _servers.begin(); it != _servers.end(); ++it) {
         ServerConfig server = *it;
@@ -325,6 +408,15 @@ void Config::checkConfig() const {
         }
         if (server.error_pages.empty()) {
             throw Except("Server block missing error_page directive");
+        }
+        else {
+            for (std::map<int, std::string>::const_iterator ep_it = server.error_pages.begin(); ep_it != server.error_pages.end(); ++ep_it) {
+                if (ep_it->first < 300 || ep_it->first > 599) {
+                    throw Except("Invalid error code: " + std::to_string(ep_it->first));
+                } else if (ep_it->second.empty()) {
+                    throw Except("Server block missing error_page directive");
+                }
+            }
         }
         if (server.client_max_body_size == 0) {
             throw Except("Server block missing client_max_body_size directive");
