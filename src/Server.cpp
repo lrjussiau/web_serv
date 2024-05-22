@@ -25,13 +25,15 @@ std::vector<int>	Server::getSockets(void) const{
 
 void	Server::createServer(ServerConfig server_config){
 	this->_server_config = server_config;
-	for (size_t i = 0; i <= server_config.listen_ports.size(); i++) {
-		if (server_config.is_ipv4)
-		launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_ipv4);
-		//std::cout << "hello" << std::endl;
-		/*catch (const std::exception& e){
+	for (size_t i = 0; i < server_config.listen_ports.size(); i++) {
+		if (server_config.is_ipv4){
+			try{
+				launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_ipv4);
+			}
+			catch (std::exception &e){
         	std::cerr << e.what() << std::endl;
-		}*/
+			}
+		}
     }
 	return;
 }
@@ -66,6 +68,6 @@ int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
         throw ServerListeningError();
     }
 	if (DEBUG)
-		std::cout << "[Server] Created server socket fd: " << server_socket << "at ip:port : " << ip << port << std::endl;
+		std::cout << GRN << "[Server] Created server socket fd: " << server_socket << " at ip:port : " << ip << port << std::endl;
 	return (0);
 }

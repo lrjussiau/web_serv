@@ -16,6 +16,7 @@ HEADER		= $(addprefix $(INCDIR)/, WebServ.hpp Config.hpp Utils.hpp Client.hpp Se
 
 # Colors:
 GREEN		=	\e[92;5;118m
+RED			= 	\e[0;31m
 YELLOW		=	\e[93;5;226m
 GRAY		=	\e[33;2;37m
 RESET		=	\e[0m
