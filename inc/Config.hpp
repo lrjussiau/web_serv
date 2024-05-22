@@ -34,9 +34,11 @@ class Config {
 		void		loadFromFile(const std::string &filename);
 		void		printConfig() const;
 		int			parseSize(const std::string &size_str);
+        void        parseErrorPage(std::ifstream &file, ServerConfig &server, std::string line);
         void        checkConfig() const;
         bool        checkIpv4(ServerConfig &server) const;
         bool        checkIpv6(ServerConfig &server) const;
+        
 
     public:
 		Config();

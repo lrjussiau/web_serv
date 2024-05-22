@@ -28,21 +28,21 @@ Response::Response(Client client, ServerConfig server) {
 	if (client.getRequestProtocol() != "HTTP/1.1") {
 		buildStatusLine(505, "HTTP Version Not Supported");
 		createContent( path_error_page + "505.html");
-	// } else if (client.getRequestHost() != server.server_name) {							// Add Server Name				
+	// } else if (client.getRequestHost() != server.server_name) {								// Add Server Name				
 	// 	buildStatusLine(500, "Internal Server");
 	//  createContent( path_error_page + "500.html");
-	// } else if () {																			// Look For Content-Length
-	// 	buildStatusLine(413, "Request Entity Too Large");
-	//  createContent( path_error_page + "413.html");
 	// } else if () {																			// Look For Time
 	// 	buildStatusLine(408, "Request Timeout");
 	//  createContent( path_error_page + "408.html");
 	} else if (client.getRequestMethod() != "GET" && client.getRequestMethod() != "POST") {
 		buildStatusLine(405, "Method Not Allowed");
 		createContent(path_error_page + "405.html");
-	} else if (!is_file_exist(client.getRequestedUrl())) {																			// Look For File
+	} else if (!is_file_exist(client.getRequestedUrl())) {
 		buildStatusLine(404, "Not Found");
 		createContent( path_error_page + "404.html");
+	// } else if () {																			// Look For Content-Length
+	// 	buildStatusLine(413, "Request Entity Too Large");
+	//  createContent( path_error_page + "413.html");
 	} else if (client.getRequestMethod() == "POST") {
 		buildStatusLine(201, "OK");
 			//createContent();
@@ -90,7 +90,7 @@ void Response::createContent(std::string path) {
 
 
 void Response::init_headers(void) {
-	this->_headers["Date: "] = "Mon, 20 May 2024 16:08:29 GMT";
+	this->_headers["Date: "] = getTime();
 	this->_headers["Content-Length: "] = std::to_string(this->_content.length());
 	this->_headers["Content-Type: "] = "text/html";
 	this->_headers["Connection: "] = "keep-alive";
