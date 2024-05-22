@@ -3,8 +3,17 @@
 #include "../inc/Utils.hpp"
 #include "../inc/Supervisor.hpp"
 
+void signalHandler(int signum) {
+    std::cout << "Interrupt signal (" << signum << ") received.\n";
+
+    // Cleanup and close up stuff here
+    // Terminate program
+    exit(signum);
+}
+
 int main(int argc, char **argv) {
 
+    signal(SIGINT, signalHandler);
 	try {
 		if (argc != 2)
         	throw Except("Please provide a config file. ./web_serv \"file\"");
