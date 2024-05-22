@@ -2,17 +2,14 @@
 
 /* a faire: gere les fd set proprement, function pour tout shutdown, rrearranger function/ordre*/
 
-int	findFdMax(fd_set all_sockets) {
-	int	max = 0;
-
-	for (int fd = 0; fd < FD_SETSIZE; ++fd) {
-		if (FD_ISSET(fd, &all_sockets) && fd > max)
-			max = fd;
-	}
-	return max;
-}
-
 Supervisor::~Supervisor(void){
+	std::cout << GRN <<  "Closing all connections" << std::endl;
+	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
+		close(it->first);
+	}
+	for (std::map<int, Client>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
+		close(it->first);
+	}
 	return;
 }
 
@@ -28,56 +25,82 @@ Supervisor::Supervisor(void){
 	FD_ZERO(&(this->_write_fds));
 	this->_timer.tv_sec = 2;
     this->_timer.tv_usec = 0;
-	this->_fd_max = findFdMax(this->_all_sockets);
+	updateFdMax();
 }
 
-/*void	Supervisor::fdSetAdd(int socket_fd){
-	FD_SET(socket_fd, &(this->_all_sockets));
-	FD_SET(socket_fd, &(this->_read_fds));
-	FD_SET(socket_fd, &(this->_write_fds));
-	this->_fd_max = findFdMax(this->_all_sockets);
-}*/
+/*				manipulation des fds				*/
 
-void	Supervisor::shutdown(void){
-	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
-		removeServer(it->first);
+void	Supervisor::updateFdMax(void) {
+	int	max = 0;
+
+	for (int fd = 0; fd < FD_SETSIZE; ++fd) {
+		if (FD_ISSET(fd, &(this->_all_sockets)) && fd > max)
+			max = fd;
 	}
-	return;
+	this->_fd_max = max;
 }
 
-void	Supervisor::fdSetRemove(int socket_fd){
+void	Supervisor::fdSetRemove(int socket){
 	//close(socket_fd);
-	FD_CLR(socket_fd, &(this->_all_sockets));
-	FD_CLR(socket_fd, &(this->_read_fds));
-	FD_CLR(socket_fd, &(this->_write_fds));
-	this->_fd_max = findFdMax(this->_all_sockets);
+	FD_CLR(socket, &(this->_all_sockets));
+	FD_CLR(socket, &(this->_read_fds));
+	FD_CLR(socket, &(this->_write_fds));
+	updateFdMax();
 }
 
-int		Supervisor::isServer(int socket_fd) const{
+/*				util				*/
+
+int		Supervisor::isServer(int socket) const{
 	std::map<int, Server*>::const_iterator it;
 
-	it = this->_servers_map.find(socket_fd);
+	it = this->_servers_map.find(socket);
 	if (it == this->_servers_map.end())
 		return 0;
 	return 1;
 }
 
-void	Supervisor::addServer(ServerConfig server_config){
-	Server 				*new_server = new Server();
+/*				server creation/deletion				*/
+
+
+void	Supervisor::runServers(Config configuration){
+	std::vector<ServerConfig> servers_config = configuration.getServers();
+	Server 				*new_server = NULL;
 	std::vector<int>	new_server_sockets;
 
-	new_server->createServer(server_config);
-	new_server_sockets = new_server->getSockets();
-	for (std::vector<int>::iterator it = new_server_sockets.begin(); it != new_server_sockets.end(); ++it){
-		FD_SET(*it, &(this->_all_sockets));
-		FD_SET(*it, &(this->_read_fds));
-		this->_fd_max = findFdMax(this->_all_sockets);
-		this->_servers_map[*it] = new_server;
+	for (std::vector<ServerConfig>::iterator server_cnf = servers_config.begin(); server_cnf != servers_config.end(); ++server_cnf){
+		new_server = new Server();
+		new_server->createServer(*server_cnf);
+		new_server_sockets = new_server->getSockets();
+		for (std::vector<int>::iterator server_sock = new_server_sockets.begin(); server_sock != new_server_sockets.end(); ++server_sock){
+			FD_SET(*server_sock, &(this->_all_sockets));
+			FD_SET(*server_sock, &(this->_read_fds));
+			this->_servers_map[*server_sock] = new_server;
+		}
 	}
+	updateFdMax();
 	return;
 }
 
-void	Supervisor::removeClients(int server_socket){
+void	Supervisor::closeServer(int server_socket){
+	Server								*server = this->_servers_map[server_socket];
+	std::vector<int>					server_sockets = server->getSockets();
+	std::map<int, Server*>::iterator	it;
+
+	for (unsigned long i = 0; i < server_sockets.size(); i++){
+		fdSetRemove(server_sockets[i]);
+		it = this->_servers_map.find(server_sockets[i]);
+		//free(it->second);
+		this->_servers_map.erase(it);
+		removeClientsFromServer(server_socket);
+		close(server_sockets[i]);
+	}
+	updateFdMax();
+	return;
+}
+
+/*				client deletion				*/
+
+void	Supervisor::removeClientsFromServer(int server_socket){
 	for (std::map<int, Client>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
 		if (it->second.getServerSocket() == server_socket){
 			fdSetRemove(it->first);
@@ -92,43 +115,10 @@ void	Supervisor::closeClient(int client_socket){
 
 	FD_CLR(client_socket, &(this->_read_fds));
 	this->_clients_map.erase(it);
-	this->_fd_max = findFdMax(this->_all_sockets);
+	updateFdMax();
 	close(client_socket);
 }
 
-//remove server_socket -> manque remove clients + s the server really destrozyed?
-void	Supervisor::removeServer(int server_socket){
-	Server								*server = this->_servers_map[server_socket];
-	std::vector<int>					server_sockets = server->getSockets();
-	std::map<int, Server*>::iterator	it;
-
-	for (unsigned long i = 0; i < server_sockets.size(); i++){
-		fdSetRemove(server_sockets[i]);
-		it = this->_servers_map.find(server_sockets[i]);
-		free(it->second);
-		this->_servers_map.erase(it);
-		removeClients(server_socket);
-		close(server_sockets[i]);
-	}
-	this->_fd_max = findFdMax(this->_all_sockets);
-	return;
-}
-
-void Supervisor::acceptNewConnection(int server_socket){
-    int 	client_socket;
-
-    client_socket = accept(server_socket, NULL, NULL);
-	Client	new_client(server_socket, client_socket);
-    if (client_socket == -1) {
-        std::cout << RED << "[Server " << server_socket << "] Accept error" << std::endl;
-        return ;
-    }
-    FD_SET(client_socket, &(this->_read_fds));
-	FD_SET(client_socket, &(this->_all_sockets));
-	this->_clients_map[client_socket] = new_client;
-	this->_fd_max = findFdMax(this->_all_sockets);
-	std::cout << GRN << "[Server " << server_socket << "] Accepted new connection on client socket: " << client_socket << std::endl;
-}
 
 void	Supervisor::manageOperations(void){
 	while (1) {
@@ -172,6 +162,22 @@ void	Supervisor::manageOperations(void){
 	return;
 }
 
+void Supervisor::acceptNewConnection(int server_socket){
+    int 	client_socket;
+
+    client_socket = accept(server_socket, NULL, NULL);
+	Client	new_client(server_socket, client_socket);
+    if (client_socket == -1) {
+        std::cout << RED << "[Server " << server_socket << "] Accept error" << std::endl;
+        return ;
+    }
+    FD_SET(client_socket, &(this->_read_fds));
+	FD_SET(client_socket, &(this->_all_sockets));
+	this->_clients_map[client_socket] = new_client;
+	updateFdMax();
+	std::cout << GRN << "[Server " << server_socket << "] Accepted new connection on client socket: " << client_socket << std::endl;
+}
+
 void Supervisor::readRequestFromClient(int client_socket){
     char buffer[BUFSIZ];
     int bytes_read;
@@ -208,16 +214,5 @@ void	Supervisor::writeResponseToClient(int client_socket){
 	else
 		std::cout << GRN << "successfully sent response" << GRN <<  std::endl; 
 
-}
-
-void	Supervisor::buildServers(Config configuration){
-	std::vector<ServerConfig> servers;
-
-	servers = configuration.getServers();
-	for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end(); ++it){
-
-		addServer(*it);
-	}
-	return;
 }
 

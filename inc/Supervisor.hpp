@@ -5,7 +5,7 @@
 #include "Config.hpp"
 #include "Client.hpp"
 #include "Response.hpp"
-// #include "WebServ.hpp"
+//#include "WebServ.hpp"
 
 // class Client;
 class Config;
@@ -33,22 +33,17 @@ class Supervisor {
 		~Supervisor(void);
 		Supervisor(const Supervisor& src);
 
-
-		//void	fdSetAdd(int socket_fd);
-		void	fdSetRemove(int socket_fd);
-		int		isServer(int socket_fd) const;
-		void	shutdown(void);
-		void	buildServers(Config configuration);
-		void	addServer(ServerConfig server_config);
-		void	removeServer(int fd);
-		void	removeClients(int server_fd);
-		void	closeClient(int client_fd);
-		void	acceptNewConnection(int server_socket);
-		void	readRequestFromClient(int client_socket);
-		void	writeResponseToClient(int client_socket);
-		void	manageOperations(void);
+		void		acceptNewConnection(int server_socket);
+		void		closeClient(int client_socket);
+		void		closeServer(int server_socket);
+		void		fdSetRemove(int socket);
+		int			isServer(int socket) const;
+		void		manageOperations(void);
+		void		readRequestFromClient(int client_socket);
+		void		removeClientsFromServer(int server_socket);
+		void		runServers(Config configuration);
+		void		updateFdMax(void);
+		void		writeResponseToClient(int client_socket);
 };
-
-int	findFdMax(fd_set all_sockets);
 
 #endif

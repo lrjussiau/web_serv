@@ -1,5 +1,6 @@
 #include "../inc/Server.hpp"
 
+//split launch socket en deux?
 
 Server::Server(void){
 	return;
@@ -19,9 +20,18 @@ Server&	Server::operator=(const Server& src){
 	return *this;
 }
 
+/*				getters						*/
+
 std::vector<int>	Server::getSockets(void) const{
 	return this->_sockets;
 }
+
+ServerConfig	Server::getServerConfig(void) const{
+	return this->_server_config;
+}
+
+
+/*				launch server				*/
 
 void	Server::createServer(ServerConfig server_config){
 	this->_server_config = server_config;
@@ -38,13 +48,10 @@ void	Server::createServer(ServerConfig server_config){
 	return;
 }
 
-ServerConfig	Server::getServerConfig(void) const{
-	return this->_server_config;
-}
-//ipv4 a regler
 int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
 	struct sockaddr_in sa;
 	int					server_socket;
+	int					opt = 1;
 
     memset(&sa, 0, sizeof sa);
 	if (IPv4){
@@ -61,8 +68,13 @@ int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
     if (server_socket == -1) {
         throw ServerSocketError();
     }
+	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
+        perror("setsockopt");
+        exit(EXIT_FAILURE);
+    }
     if (bind(server_socket, (struct sockaddr *)&sa, sizeof sa)) {
-    	throw ServerBindingError();
+		fprintf(stderr, "[Server] Binding error: %s\n", strerror(errno));
+    	//throw ServerBindingError();
 	}
     if (listen(server_socket, 10)) {
         throw ServerListeningError();

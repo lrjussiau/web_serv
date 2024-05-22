@@ -38,3 +38,4 @@ std::string getTime(){
 	std::strftime(buffer, 80, "%a, %d %B %Y %H:%M:%S GMT", gmtTime);
 	return std::string (buffer);
 }
+
