@@ -28,6 +28,11 @@ Config &Config::operator=(const Config &src) {
 // 					  Utils Functons
 // ------------------------------------------------------
 
+void trimSemicolon(std::string& str) {
+    if (!str.empty() && str[str.size() - 1] == ';') {
+        str.erase(str.size() - 1);
+    }
+}
 
 int Config::parseSize(const std::string &size_str) {
     std::string numStr;
@@ -90,7 +95,9 @@ std::string get_final_page(std::string page, int code) {
         }
         final_page += parts[i];
     }
-    
+    if (!final_page.empty() && final_page[final_page.size() - 1] == ';') {
+        final_page.erase(final_page.size() - 1);
+    }
     return final_page;
 }
 
@@ -125,13 +132,13 @@ void    Config::parseErrorPage(std::ifstream &file, ServerConfig &server, std::s
         } else if (it->find("40") != std::string::npos) {
             for (std::vector<int>::iterator it2 = error_codes.begin(); it2 != error_codes.end(); ++it2) {
                 if (*it2 >= 400 && *it2 <= 499) {
-                    server.error_pages[*it2] = *it;
+                    server.error_pages[*it2] = get_final_page(*it, *it2);
                 }
             }
         } else if (it->find("30") != std::string::npos) {
             for (std::vector<int>::iterator it2 = error_codes.begin(); it2 != error_codes.end(); ++it2) {
                 if (*it2 >= 300 && *it2 <= 399) {
-                    server.error_pages[*it2] = *it;
+                    server.error_pages[*it2] = get_final_page(*it, *it2);
                 }
             }
         }
@@ -189,6 +196,7 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
             }
         } else if (token == "server_name") {
             iss >> server.server_name;
+            trimSemicolon(server.server_name);
             if (checkIpv4(server)) {
                 server.is_ipv4 = true;
             } else {
@@ -198,8 +206,10 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
             }
         } else if (token == "root") {
             iss >> server.root;
+            trimSemicolon(server.root);
         } else if (token == "index") {
             iss >> server.index;
+            trimSemicolon(server.index);
         } else if (token == "error_page") {
             parseErrorPage(file, server, line);
         } else if (token == "client_max_body_size") {
@@ -229,14 +239,18 @@ Location Config::parseLocationBlock(std::ifstream &file) {
         if (token == "allow_methods") {
             std::string method;
             while (iss >> method) {
+                trimSemicolon(method);
                 location.allow_methods.push_back(method);
             }
         } else if (token == "root") {
             iss >> location.root;
+            trimSemicolon(location.root);
         } else if (token == "upload_store") {
             iss >> location.upload_store;
+            trimSemicolon(location.upload_store);
         } else if (token == "cgi_pass") {
             iss >> location.cgi_pass;
+            trimSemicolon(location.cgi_pass);
         } else if (token == "autoindex") {
             std::string value;
             iss >> value;

@@ -1,5 +1,25 @@
 #include "../inc/Response.hpp"
 
+enum PathType {
+    PATH_NOT_FOUND,
+    PATH_IS_FILE,
+    PATH_IS_DIRECTORY
+};
+
+PathType getPathType(const std::string& path) {
+	struct stat pathStat;
+	if (stat(path.c_str(), &pathStat) != 0) {
+		return PATH_NOT_FOUND;
+	}
+	if (S_ISREG(pathStat.st_mode)) {
+		return PATH_IS_FILE;
+	}
+	if (S_ISDIR(pathStat.st_mode)) {
+		return PATH_IS_DIRECTORY;
+	}
+	return PATH_NOT_FOUND;
+}
+
 void 		Response::buildResponse(void){
 	std::string	final_reply;
 
@@ -20,44 +40,65 @@ Response::Response(void) {
 	return;
 }
 
-// 200 - 201 - 400 - 404 - 405 - 408 - 413 - 500 - 505
-
 Response::Response(Client client, ServerConfig server) {
-	std::string path_error_page = "src/html/error_page/";
+	std::string	path;
+	bool 		find_location = false;
+	Location 	location;
 
 	std::cout << GRN << "I am building a response from: " << server.server_name << std::endl;
-	if (client.getRequestProtocol() != "HTTP/1.1") {
-		buildStatusLine(505, "HTTP Version Not Supported");
-		createContent( path_error_page + "505.html");
-	// } else if (client.getRequestHost() != server.server_name) {								// Add Server Name				
-	// 	buildStatusLine(500, "Internal Server");
-	//  createContent( path_error_page + "500.html");
-	// } else if () {																			// Look For Time
-	// 	buildStatusLine(408, "Request Timeout");
-	//  createContent( path_error_page + "408.html");
-	} else if (client.getRequestMethod() != "GET" && client.getRequestMethod() != "POST") {
+	if (client.getRequestMethod() != "GET" && client.getRequestMethod() != "POST" && client.getRequestMethod() != "DELETE") {
 		buildStatusLine(405, "Method Not Allowed");
-		createContent(path_error_page + "405.html");
-	} else if (!is_file_exist(client.getRequestedUrl())) {
-		buildStatusLine(404, "Not Found");
-		createContent( path_error_page + "404.html");
-	// } else if () {																			// Look For Content-Length
+		createContent(server.root + server.error_pages[405]);
+	}
+	// 	if () {																			// Look For Content-Length
 	// 	buildStatusLine(413, "Request Entity Too Large");
 	//  createContent( path_error_page + "413.html");
-	} else if (client.getRequestMethod() == "POST") {
-		buildStatusLine(201, "OK");
-			//createContent();
-	} else if (client.getRequestMethod() == "GET") {
-		buildStatusLine(200, "OK");
-		if (client.getRequestedUrl() == "/")
-			createContent("src/html/index.html");
-		else if (client.getRequestedUrl() != "/favicon.ico")
-			createContent("src/html" + client.getRequestedUrl());
-	} else {
-		buildStatusLine(400, "BAD REQUEST");
-		createContent( path_error_page + "400.html");
+
+	// Implement redirect 
+
+	for (std::map<std::string, Location>::iterator it = server.locations.begin(); it != server.locations.end(); ++it) {
+		if (client.getRequestedUrl().find(it->first) != std::string::npos) {
+ 			location = it->second;
+			find_location = true;
+			break;
+		}
 	}
-	return;
+	if (!find_location) {
+		path = server.root + client.getRequestedUrl();
+	} else {
+		path = location.root + client.getRequestedUrl();
+	}
+	PathType pathType = getPathType(path);
+	switch (pathType) {
+		case PATH_IS_FILE:
+			break;
+		case PATH_IS_DIRECTORY:
+			if (getPathType(path + "/index.html") == PATH_IS_FILE) {
+                path += "/index.html";
+			} else {
+				if (location.autoindex) {
+					// createContent(autoindex)
+				} else {
+					buildStatusLine(403, "Forbidden");
+					createContent(server.root + server.error_pages[403]);
+				}
+			}
+			break;
+		case PATH_NOT_FOUND:
+			buildStatusLine(404, "Not Found");
+			createContent(server.root + server.error_pages[404]);
+			break;
+	}
+	// If extention CGI
+		// createContent(CGI) 
+	// If wrong mime type
+		// createContent(415)
+	if (client.getRequestMethod() == "POST") {
+		// createContent(201)
+	} else {
+		buildStatusLine(200, "OK");
+		createContent(path);
+	}
 }
 
 Response::~Response(void) {
@@ -84,7 +125,7 @@ void Response::createContent(std::string path) {
 		}
 		file.close();
 	} else {
-		throw Except("Fail to open file");
+		// throw Except("Fail to open file");
 	}
 	init_headers();
 }
@@ -108,14 +149,4 @@ void Response::init_headers(void) {
 
 std::string	Response::getFinalReply(void) const{
 	return this->_final_reply;
-}
-
-bool	Response::is_file_exist(const std::string& path) {
-	std::ifstream file("src/html/" + path);
-	if (file.is_open()) {
-		file.close();
-		return true;
-	} else {
-		return false;
-	}
 }
