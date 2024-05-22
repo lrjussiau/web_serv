@@ -54,16 +54,16 @@ int		Supervisor::isServer(int socket_fd) const{
 }
 
 void	Supervisor::addServer(ServerConfig server_config){
-	Server 				new_server;
+	Server 				*new_server = new Server();
 	std::vector<int>	new_server_sockets;
-	new_server.createServer(server_config);
-	new_server_sockets = new_server.getSockets();
-	for (unsigned long i = 0; i < new_server_sockets.size(); i++){
-		FD_SET(new_server_sockets[i], &(this->_all_sockets));
-		FD_SET(new_server_sockets[i], &(this->_read_fds));
+
+	new_server->createServer(server_config);
+	new_server_sockets = new_server->getSockets();
+	for (std::vector<int>::iterator it = new_server_sockets.begin(); it != new_server_sockets.end(); ++it){
+		FD_SET(*it, &(this->_all_sockets));
+		FD_SET(*it, &(this->_read_fds));
 		this->_fd_max = findFdMax(this->_all_sockets);
-		this->_servers_map[new_server_sockets[i]] = &new_server;
-		std::cout << "[Server] Server socket " << new_server_sockets[i] << " added to the supervisor" << std::endl;
+		this->_servers_map[*it] = new_server;
 	}
 	return;
 }
@@ -103,50 +103,50 @@ void	Supervisor::removeServer(int server_socket){
 
 void Supervisor::acceptNewConnection(int server_socket){
     int 	client_socket;
-	Client	new_client;
 
     client_socket = accept(server_socket, NULL, NULL);
+	Client	new_client(server_socket, client_socket);
     if (client_socket == -1) {
-        fprintf(stderr, "[Server] Accept error: %s\n", strerror(errno));
+        std::cout << RED << "[Server " << server_socket << "] Accept error" << std::endl;
         return ;
     }
     FD_SET(client_socket, &(this->_read_fds));
 	FD_SET(client_socket, &(this->_all_sockets));
 	this->_clients_map[client_socket] = new_client;
 	this->_fd_max = findFdMax(this->_all_sockets);
-    printf("[Server] Accepted new connection on client socket %d.\n", client_socket);
+	std::cout << GRN << "[Server " << server_socket << "] Accepted new connection on client socket: " << client_socket << std::endl;
 }
 
 void	Supervisor::manageOperations(void){
 	while (1) {
 		this->_read_fds = this->_all_sockets;
-		this->_write_fds = this->_all_sockets;
+		//this->_write_fds = this->_all_sockets;
 		//this->_excep_fds = this->_all_sockets;
         if (select(this->_fd_max + 1, &(this->_read_fds), &(this->_write_fds), NULL, &(this->_timer)) == -1) {
             fprintf(stderr, "[Server] Select error: %s\n", strerror(errno));
             exit(1);
         }
-        printf("[Server] Waiting...\n");
+       	std::cout << YEL << "[Servers] Waiting..." << RST << std::endl;
 		for (int fd = 0; fd <= this->_fd_max; fd++) {
 			if (FD_ISSET(fd, &(this->_read_fds)) != 0) {
 				if (isServer(fd)) {
 					if (DEBUG)
-						std::cout << "[Server] A connection with a new client is made" << std::endl;
+						std::cout << GRN << "[Server "<< fd << "] A connection with a new client is made" << std::endl;
 					acceptNewConnection(fd);
 				}
 				else {
 					if (DEBUG)
-						std::cout << "[Client:" << fd << "] A request has been sent" << std::endl;
+						std::cout << GRN << "[Client:" << fd << "] A request has been sent" << std::endl;
 					readRequestFromClient(fd);
 				}
 			}
 			if (FD_ISSET(fd, &(this->_write_fds)) != 0) {
 				if (isServer(fd)) {
-					std::cout << "[ERROR] Une socket server est ouverte pour lecture" << std::endl;
+					std::cout << RED << "[ERROR] Une socket server est ouverte pour lecture" << std::endl;
 				}
 				else {
 					if (DEBUG)
-						std::cout << "[Client:" << fd << "] A client is ready to receive a response" << std::endl;
+						std::cout << GRN <<"[Client:" << fd << "] A client is ready to receive a response" <<std::endl;
 					writeResponseToClient(fd);
 					
 				}
@@ -167,10 +167,10 @@ void Supervisor::readRequestFromClient(int client_socket){
     bytes_read = recv(client_socket, &buffer, BUFSIZ, 0);
     if (bytes_read <= 0) {
         if (bytes_read == 0) {
-           std::cout << "[] Client socket closed connection." << std::endl;
+           std::cout << "[Client " << client_socket << "] socket closed connection." << GRN << std::endl;
         }
         else {
-            std::cout << "[Server] Recv error:" << std::endl;;
+            std::cout << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" <<  std::endl;;
         }
 		FD_CLR(client_socket, &(this->_read_fds));
 		closeClient(client_socket);
@@ -188,12 +188,14 @@ void	Supervisor::writeResponseToClient(int client_socket){
 	Server *server = this->_servers_map[client.getServerSocket()];
 	Response response(client, server->getServerConfig());
 
-	FD_SET(client_socket, &(this->_write_fds));
+	FD_SET(client_socket, &(this->_read_fds));
 	FD_CLR(client_socket, &(this->_write_fds));
 	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT)){
-		fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
+		std::cout << RED << "[Server "<< client.getServerSocket() << "] Send error to client fd: " << client.getSocket() << std::endl;
+		//fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
 	}
-	std::cout << "successfully sent response" << std::endl; 
+	else
+		std::cout << "successfully sent response" << GRN <<  std::endl; 
 
 }
 
@@ -201,8 +203,9 @@ void	Supervisor::buildServers(Config configuration){
 	std::vector<ServerConfig> servers;
 
 	servers = configuration.getServers();
-	for (unsigned long i = 0; i < servers.size(); i++){
-		addServer(servers[i]);
+	for (std::vector<ServerConfig>::iterator it = servers.begin(); it != servers.end(); ++it){
+
+		addServer(*it);
 	}
 	return;
 }

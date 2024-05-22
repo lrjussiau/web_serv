@@ -23,8 +23,9 @@ Response::Response(void) {
 // 200 - 201 - 400 - 404 - 405 - 408 - 413 - 500 - 505
 
 Response::Response(Client client, ServerConfig server) {
-	std::cout << server.server_name << std::endl;
 	std::string path_error_page = "src/html/error_page/";
+
+	std::cout << GRN << "I am building a response from: " << server.server_name << std::endl;
 	if (client.getRequestProtocol() != "HTTP/1.1") {
 		buildStatusLine(505, "HTTP Version Not Supported");
 		createContent( path_error_page + "505.html");
