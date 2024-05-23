@@ -13,10 +13,12 @@ class Response {
 		std::map<std::string, std::string>	_headers;
 		std::string							_content;
 		std::string							_final_reply;
+		Client								_client;
 
 		void 		buildResponse(void);
 		void 		createContent(std::string path, int status_code, std::string status_message);	
 		void		init_headers(void);
+		bool		checkMimeType(std::string mime);
 
 	public:
 		Response(void);

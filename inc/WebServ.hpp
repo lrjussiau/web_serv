@@ -15,6 +15,7 @@
 #define MAG "\033[1;35m"
 #define CYA "\033[1;36m"
 #define WHT "\033[1;37m"
+#define ORG "\033[1;38;2;255;165;0m"
 #define CLR "\033[2J\033[1;1H"
 
 // INCLUDES

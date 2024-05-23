@@ -212,7 +212,7 @@ void	Supervisor::writeResponseToClient(int client_socket){
 		//fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
 	}
 	else
-		std::cout << GRN << "successfully sent response" << RST <<  std::endl; 
+		std::cout << ORG << "successfully sent response" << RST <<  std::endl; 
 
 }
 

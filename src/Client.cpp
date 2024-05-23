@@ -29,6 +29,9 @@ Client&	Client::operator=(const Client& src){
 	this->_requestedUrl = src.getRequestedUrl();
 	this->_requestMethod = src.getRequestMethod();
 	this->_requestProtocol = src.getRequestProtocol();
+	this->_requestHost = src.getRequestHost();
+	this->_requestConnection = src.getRequestConnection();
+	this->_requestMimetype = src.getRequestMimetype();
 	return *this;
 }
 
@@ -47,19 +50,33 @@ void Client::setData(char *buffer){
 			std::istringstream line_stream(line);
 			line_stream >> this->_requestMethod >> this->_requestedUrl >> this->_requestProtocol;
 		}
-		//  << line << std::endl;
+		// std::cout << MAG << line << RST << std::endl;
 		if (line.find("Host:") != std::string::npos){
 			this->_requestHost = line.substr(6);
 		}
+		if (line.find("Connection:") != std::string::npos){
+			this->_requestConnection = line.substr(12);
+		}
+    	if (line.find("Accept:") != std::string::npos) {
+			std::string acceptValue = line.substr(line.find("Accept:") + 7);
+			std::istringstream iss(acceptValue);
+			std::string token;
+			if (std::getline(iss, token, ',')) {
+				token.erase(0, token.find_first_not_of(' '));
+				this->_requestMimetype = token;
+			}
+		}
 		i++;
 	}
-	// if (DEBUG) {
-	// 	 << YEL << "Client Request:" << std::endl;
-	// 	 << "Request Host: " << this->_requestHost << std::endl;
-	// 	 << "Request Method: " << this->_requestMethod << std::endl;
-	// 	 << "Requested URL: " << this->_requestedUrl << std::endl;
-	// 	 << "Request Protocol: " << this->_requestProtocol << RST << std::endl;
-	// }
+	if (DEBUG) {
+		std::cout << YEL << "Client Request:" << std::endl;
+		std::cout << "Request Host: " << this->_requestHost << std::endl;
+		std::cout << "Request Method: " << this->_requestMethod << std::endl;
+		std::cout << "Requested URL: " << this->_requestedUrl << std::endl;
+		std::cout << "Request Protocol: " << this->_requestProtocol << std::endl;
+		std::cout << "Request Connection: " << this->_requestConnection << std::endl;
+		std::cout << "Request Mimetype: " << this->_requestMimetype << RST << std::endl;
+	}
 }
 
 // ------------------------------------------------------
@@ -88,4 +105,12 @@ int	Client::getServerSocket(void) const{
 
 std::string Client::getRequestHost(void) const{
 	return this->_requestHost;
+}
+
+std::string Client::getRequestConnection(void) const{
+	return this->_requestConnection;
+}
+
+std::string Client::getRequestMimetype(void) const{
+	return this->_requestMimetype;
 }

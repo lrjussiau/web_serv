@@ -20,12 +20,12 @@ Response::Response(void) {
 	return;
 }
 
-Response::Response(Client client, ServerConfig server) {
+Response::Response(Client client, ServerConfig server) : _client(client) {
 	std::string	path;
 	bool 		find_location = false;
 	Location 	location;
 
-	std::cout << GRN << "I am building a response from: " << server.server_name << std::endl;
+	std::cout << ORG << "[Server : " << server.server_name << "] build a response" << RST << std::endl;
 	if (client.getRequestMethod() != "GET" && client.getRequestMethod() != "POST" && client.getRequestMethod() != "DELETE") {
 		createContent(server.root + server.error_pages[405], 405, "Method Not Allowed");
 	}
@@ -70,8 +70,9 @@ Response::Response(Client client, ServerConfig server) {
 			createContent(path, 0, "CGI");
 		}
 	}
-	// If wrong mime type
-		// createContent(415)
+	if (checkMimeType(client.getRequestMimetype()) == false) {
+		createContent(server.root + server.error_pages[415], 415, "Unsupported Media Type");
+	}
 	if (client.getRequestMethod() == "POST") {
 		// createContent(201)
 	} else {
@@ -119,19 +120,36 @@ void Response::createContent(std::string path, int status_code, std::string stat
 void Response::init_headers(void) {
 	this->_headers["Date: "] = getTime();
 	this->_headers["Content-Length: "] = std::to_string(this->_content.length());
-	this->_headers["Content-Type: "] = "text/html";
-	this->_headers["Connection: "] = "keep-alive";
+	this->_headers["Content-Type: "] = this->_client.getRequestMimetype();
+	this->_headers["Connection: "] = this->_client.getRequestConnection();
 	if (DEBUG) {
 		std::cout << CYA << "Server Response: "<< std::endl;
 		std::cout << this->_status_line << std::endl;
 		for (std::map<std::string, std::string>::iterator it = this->_headers.begin(); it != this->_headers.end(); ++it) {
 			std::cout << it->first << it->second << std::endl;
 		}
-		std::cout << CYA << this->_content << RST << std::endl;
+		// std::cout << CYA << this->_content << RST << std::endl;
 	}
 	buildResponse();
 }
 
 std::string	Response::getFinalReply(void) const{
 	return this->_final_reply;
+}
+
+bool Response::checkMimeType(std::string mime) {
+	if (mime == "text/html" || mime == "text/css" 
+		|| mime == "text/javascript" || mime == "image/png" 
+		|| mime == "image/jpg" || mime == "image/jpeg" || mime == "image/gif" 
+		|| mime == "image/bmp" || mime == "image/webp" || mime == "image/avif"
+		|| mime == "image/svg+xml" || mime == "image/x-icon" || mime == "application/xml" 
+		|| mime == "application/json" || mime == "application/javascript" 
+		|| mime == "application/x-javascript" || mime == "application/x-www-form-urlencoded"
+		|| mime == "multipart/form-data" || mime == "text/plain") {
+		return true;
+	}
+	if (DEBUG) {
+		std::cout << RED << "Unsupported Media Type: " << mime << RST << std::endl;
+	}
+	return false;
 }

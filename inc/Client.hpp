@@ -14,6 +14,8 @@ class Client {
 		std::string _requestMethod;
 		std::string _requestProtocol;
 		std::string _requestHost;
+		std::string _requestConnection;
+		std::string _requestMimetype;
 
 	public:
 		Client(void);
@@ -30,6 +32,8 @@ class Client {
 		std::string getRequestMethod(void) const;
 		std::string getRequestProtocol(void) const;
 		std::string getRequestHost(void) const;
+		std::string getRequestConnection(void) const;
+		std::string getRequestMimetype(void) const;
 };
 
 #endif
