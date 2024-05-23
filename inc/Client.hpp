@@ -16,6 +16,10 @@ class Client {
 		std::string _requestHost;
 		std::string _requestConnection;
 		std::string _requestMimetype;
+		std::string _postName;
+		std::string _buffer;
+
+		void	parsePostRequest(std::string &body);
 
 	public:
 		Client(void);
@@ -34,6 +38,8 @@ class Client {
 		std::string getRequestHost(void) const;
 		std::string getRequestConnection(void) const;
 		std::string getRequestMimetype(void) const;
+		std::string getPostName(void) const;
+		std::string getBuffer(void) const;
 };
 
 #endif
