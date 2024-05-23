@@ -19,6 +19,7 @@ class Response {
 		void 		createContent(std::string path, int status_code, std::string status_message);	
 		void		init_headers(void);
 		bool		checkMimeType(std::string mime);
+		void		generateAutoIndex(std::string dir_requested);
 
 	public:
 		Response(void);

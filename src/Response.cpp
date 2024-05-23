@@ -55,6 +55,7 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
                 path += "/index.html";
 			} else {
 				if (location.autoindex) {
+					generateAutoIndex(client.getRequestedUrl());
 					createContent(path, 0, "autoindex");
 				} else {
 					createContent(server.root + server.error_pages[403], 403, "Forbidden");
@@ -78,6 +79,39 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	} else {
 		createContent(path, 200, "OK");
 	}
+}
+
+std::vector<std::string>	returnFiles(std::string dir_requested){
+	 std::vector<std::string>	files;
+	 struct dirent* 			entry;
+
+    DIR* dir = opendir(dir_requested.c_str());
+    if (dir == NULL) {
+        std::cerr << "Error: Unable to open directory " << dir_requested<< std::endl;
+        return files;
+    }
+
+    while ((entry = readdir(dir)) != NULL) {
+        std::string name = entry->d_name;
+        if (name != "." && name != "..") {
+            files.push_back(name);
+        }
+    }
+    closedir(dir);
+    return files;
+}
+
+void	Response::generateAutoIndex(std::string dir_requested){
+	std::string					auto_index;
+    std::vector<std::string>	files = returnFiles(dir_requested);
+
+	auto_index += "<!DOCTYPE html>\n<html>\n<head><title>" + dir_requested + "/</title></head>\n<body>\n";
+	auto_index += "<h1>"+ dir_requested + "/</h1><hr><pre><a href=\"../\">../</a>";
+	for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it){
+		auto_index += "<a href=\"" + *it + "/\">" + *it + "/</a>\n";     
+	}
+	auto_index += "</body>\n</html>\n";
+	this->_content = auto_index;
 }
 
 Response::~Response(void) {
