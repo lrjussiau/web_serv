@@ -19,7 +19,6 @@
 #define CLR "\033[2J\033[1;1H"
 
 // INCLUDES
-#include <string>
 #include <vector>
 #include <map>
 
@@ -29,6 +28,7 @@
 #include <sstream>
 #include <string>
 #include <dirent.h>
+#include <cstring>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -39,6 +39,7 @@
 #include <unistd.h>
 #include <ctime>
 #include <sys/stat.h>
+#include <netdb.h>
 
 // #include "Config.hpp"
 // #include "Utils.hpp"

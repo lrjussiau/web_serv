@@ -48,20 +48,45 @@ void	Server::createServer(ServerConfig server_config){
 	return;
 }
 
-int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
+std::string	resolveDomainToIp(std::string domain_name){
+	struct	addrinfo hints, *res, *p;
+    char 	ip_str[INET_ADDRSTRLEN];
+	void 	*addr;
+
+	std::cout << "ipstr: " << std::endl;
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;
+    hints.ai_socktype = SOCK_STREAM;
+
+    if (getaddrinfo(domain_name.c_str(), nullptr, &hints, &res)) {
+		//gai_strerror(status)
+        std::cerr << "getaddrinfo error: " << std::endl;
+        exit(-1);
+    }
+	for (p = res; p != nullptr; p = p->ai_next) {
+        if (p->ai_family == AF_INET) {
+            struct sockaddr_in *ipv4 = (struct sockaddr_in *)p->ai_addr;
+            addr = &(ipv4->sin_addr);
+			break;
+		}
+	}
+	inet_ntop(p->ai_family, addr, ip_str, sizeof(ip_str));
+	freeaddrinfo(res);
+
+	return std::string(ip_str);
+}
+
+int Server::launchSocket(uint32_t port, std::string ip, bool domain_name) {
 	struct sockaddr_in sa;
 	int					server_socket;
 	int					opt = 1;
 
     memset(&sa, 0, sizeof sa);
-	if (IPv4){
-		inet_pton(AF_INET, ip.c_str(), &sa.sin_addr);
-    	sa.sin_family = AF_INET;
-	}
-	else{
-		inet_pton(AF_INET6, ip.c_str(), &sa.sin_addr);
-		sa.sin_family = AF_INET6;
-	}
+	if (!domain_name)
+		ip = resolveDomainToIp(ip);
+	std::cout << "ip: "<< ip << std::endl;
+	inet_pton(AF_INET, ip.c_str(), &sa.sin_addr);
+	sa.sin_family = AF_INET;
     sa.sin_port = htons(port);
 	server_socket = socket(sa.sin_family, SOCK_STREAM, 0);
     this->_sockets.push_back(server_socket);
