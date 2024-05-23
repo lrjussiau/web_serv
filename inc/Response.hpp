@@ -19,6 +19,7 @@ class Response {
 		void 		createContent(std::string path);	
 		void		init_headers(void);
 		bool		is_file_exist(const std::string& path);
+		void		generateAutoIndex(std::string dir_requested);
 
 	public:
 		Response(void);
