@@ -261,7 +261,7 @@ Location Config::parseLocationBlock(std::ifstream &file) {
             std::string value;
             iss >> value;
             location.autoindex = (value == "on;");
-        } else if (token == "redirect") {
+        } else if (token == "return") {
             iss >> location.redirect;
             trimSemicolon(location.redirect);
         } else if (token == "}") {

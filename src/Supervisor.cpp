@@ -176,14 +176,18 @@ void Supervisor::acceptNewConnection(int server_socket){
 	this->_clients_map[client_socket] = new_client;
 	updateFdMax();
 	std::cout << GRN << "[Server " << server_socket << "] Accepted new connection on client socket: " << client_socket << RST << std::endl;
+	return;
 }
 
-void Supervisor::readRequestFromClient(int client_socket){
+void	Supervisor::readRequestFromClient(int client_socket){
     char buffer[BUFSIZ];
     int bytes_read;
 
     memset(&buffer, '\0', sizeof buffer);
-    bytes_read = recv(client_socket, &buffer, BUFSIZ, 0);
+	std::cout << "client socket " << client_socket << std::endl;
+    bytes_read = recv(client_socket, &buffer, BUFSIZ, MSG_DONTWAIT);
+	std::string request(buffer);
+	std::cout << "request " << request << std::endl;
     if (bytes_read <= 0) {
         if (bytes_read == 0) {
            std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
@@ -198,6 +202,7 @@ void Supervisor::readRequestFromClient(int client_socket){
 		FD_CLR(client_socket, &(this->_read_fds));
 		this->_clients_map[client_socket].setData(buffer);
     }
+	return;
 }
 
 void	Supervisor::writeResponseToClient(int client_socket){
@@ -213,6 +218,6 @@ void	Supervisor::writeResponseToClient(int client_socket){
 	}
 	else
 		std::cout << ORG << "successfully sent response" << RST <<  std::endl; 
-
+	return;
 }
 

@@ -16,7 +16,8 @@ class Response {
 		Client								_client;
 
 		void 		buildResponse(void);
-		void 		createContent(std::string path, int status_code, std::string status_message);	
+		void 		createContent(std::string path, int status_code, std::string status_message);
+		void		buildRedirectResponse(std::string redirect_path);
 		void		init_headers(void);
 		bool		checkMimeType(std::string mime);
 		void		generateAutoIndex(std::string dir_requested);

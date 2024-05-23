@@ -20,6 +20,13 @@ Response::Response(void) {
 	return;
 }
 
+void	Response::buildRedirectResponse(std::string redirect_path){
+	this->_status_line = "HTTP/1.1 301 OK";
+	this->_headers["Location: "] = redirect_path;
+	init_headers();
+	return;
+}
+
 Response::Response(Client client, ServerConfig server) : _client(client) {
 	std::string	path;
 	bool 		find_location = false;
@@ -32,10 +39,14 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	// 	if () {																			// Look For Content-Length
 	//  createContent(server.root + server.error_pages[413], 413, "Request Entity Too Large");
 
-	// Implement redirect 
-
+	// Implement redirect
 	for (std::map<std::string, Location>::iterator it = server.locations.begin(); it != server.locations.end(); ++it) {
 		if (client.getRequestedUrl().find(it->first) != std::string::npos) {
+			if (!it->second.redirect.empty()){
+				std::cout << GRN << "A redirect response is made" << RST << std::endl;
+				buildRedirectResponse(it->second.redirect);
+				return;
+			}
  			location = it->second;
 			find_location = true;
 			break;
@@ -88,7 +99,7 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	}
 }
 
-std::vector<std::string>	returnFiles(std::string dir_requested){
+std::vector<std::string>	getFiles(std::string dir_requested){
 	 std::vector<std::string>	files;
 	 struct dirent* 			entry;
 
@@ -111,7 +122,7 @@ std::vector<std::string>	returnFiles(std::string dir_requested){
 
 void	Response::generateAutoIndex(std::string dir_requested){
 	std::string					auto_index;
-    std::vector<std::string>	files = returnFiles(dir_requested);
+    std::vector<std::string>	files = getFiles(dir_requested);
 
 	auto_index += "<!DOCTYPE html>\n<html>\n<head><title>" + dir_requested + "/</title></head>\n<body>\n";
 	auto_index += "<h1>"+ dir_requested + "/</h1><hr><pre><a href=\"../\">../</a>";
