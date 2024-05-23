@@ -12,6 +12,7 @@ struct Location {
     std::string                 cgi_pass;
     std::vector<std::string>    cgi_extensions;
     bool                        autoindex;
+    std::string                 redirect;
 };
 
 struct ServerConfig {

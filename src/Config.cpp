@@ -261,6 +261,9 @@ Location Config::parseLocationBlock(std::ifstream &file) {
             std::string value;
             iss >> value;
             location.autoindex = (value == "on;");
+        } else if (token == "redirect") {
+            iss >> location.redirect;
+            trimSemicolon(location.redirect);
         } else if (token == "}") {
             return location;
         }
@@ -307,6 +310,9 @@ void Config::printConfig() const {
             	std::cout << "\tCGI pass: " << loc.cgi_pass << std::endl;
 			if (loc.autoindex) 
             	std::cout << "\tAutoindex: on" << std::endl;
+            if (!loc.redirect.empty()) {
+                std::cout << "\tRedirect: " << loc.redirect << std::endl;
+            }
             if (!loc.cgi_extensions.empty()) {
                 std::cout << "\tCGI extensions: ";
                 for (std::vector<std::string>::const_iterator ext_it = loc.cgi_extensions.begin(); ext_it != loc.cgi_extensions.end(); ++ext_it) {

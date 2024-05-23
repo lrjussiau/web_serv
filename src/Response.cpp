@@ -49,24 +49,28 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	PathType pathType = getPathType(path);
 	switch (pathType) {
 		case PATH_IS_FILE:
-			std::cout << "test"	<< std::endl;
 			break;
 		case PATH_IS_DIRECTORY:
 			if (getPathType(path + "/index.html") == PATH_IS_FILE) {
                 path += "/index.html";
 			} else {
 				if (location.autoindex) {
-					generateAutoIndex(client.getRequestedUrl());
-					return;
+					char cwd[1024];
+					std::string auto_index;
+					if (getcwd(cwd, sizeof(cwd)) != NULL) {
+						auto_index = cwd;
+					}
+					auto_index += location.root + client.getRequestedUrl();
+					std::cout << "AutoIndex: " << auto_index << std::endl;
+					generateAutoIndex(auto_index);
 				} else {
 					createContent(server.root + server.error_pages[403], 403, "Forbidden");
-					return;
 				}
+				return;
 			}
 			break;
 		case PATH_NOT_FOUND:
 			createContent(server.root + server.error_pages[404], 404, "Not Found");
-			return;
 			break;
 	}
 	for (std::vector<std::string>::iterator it = location.cgi_extensions.begin(); it != location.cgi_extensions.end(); ++it) {
@@ -84,55 +88,23 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	}
 }
 
-// std::vector<std::string>	returnFiles(std::string dir_requested){
-// 	 std::vector<std::string>	files;
-// 	 struct dirent* 			entry;
+std::vector<std::string>	returnFiles(std::string dir_requested){
+	 std::vector<std::string>	files;
+	 struct dirent* 			entry;
 
-//     DIR* dir = opendir(dir_requested.c_str());
-//     if (dir == NULL) {
-// 		perror("opendir");
-//         std::cerr << RED << "Error: Unable to open directory " << dir_requested << RST <<std::endl;
-//         return files;
-//     }
-// 	std::cout << "Directory opened" << std::endl;
-//     while ((entry = readdir(dir)) != NULL) {
-//         std::string name = entry->d_name;
-//         if (name != "." && name != "..") {
-//             files.push_back(name);
-//         }
-//     }
-//     closedir(dir);
-//     return files;
-// }
-
-std::vector<std::string> returnFiles(const std::string& dir_requested) {
-    std::vector<std::string> files;
-    struct dirent* entry;
-	char cwd[1024];
-	std::string cwd_str(getcwd(cwd, sizeof(cwd)));
-
-    // Get and print the current working directory
-    std::cout << "Current working directory: " << cwd_str << std::endl;
-
-	std::string dir_request = cwd_str + "/website/hmtl/" + dir_requested;
-    std::cout << "Trying to open directory: " << dir_request << std::endl;
-
-    DIR* dir = opendir(dir_request.c_str());
+    DIR* dir = opendir(dir_requested.c_str());
     if (dir == NULL) {
-        perror("opendir");
-        std::cerr << "Error: Unable to open directory " << dir_request << " - " << strerror(errno) << std::endl;
+		perror("opendir");
+        std::cerr << RED << "Error: Unable to open directory " << dir_requested << RST <<std::endl;
         return files;
     }
-
-    std::cout << "Directory opened successfully: " << dir_request << std::endl;
-
+	std::cout << "Directory opened" << std::endl;
     while ((entry = readdir(dir)) != NULL) {
         std::string name = entry->d_name;
         if (name != "." && name != "..") {
             files.push_back(name);
         }
     }
-
     closedir(dir);
     return files;
 }
@@ -147,9 +119,8 @@ void	Response::generateAutoIndex(std::string dir_requested){
 		auto_index += "<a href=\"" + *it + "/\">" + *it + "/</a>\n";     
 	}
 	auto_index += "</body>\n</html>\n";
-	std::cout << auto_index << std::endl;
 	this->_content = auto_index;
-	createContent("lol", 200, "autoindex");
+	createContent(NULL, 200, "autoindex");
 }
 
 Response::~Response(void) {
@@ -166,28 +137,24 @@ void Response::createContent(std::string path, int status_code, std::string stat
 	std::ifstream	file;
 	std::string		line;
 	std::string		content;
-	(void)path;
 
 	if (status_message == "autoindex") {
-		std::cout << path << std::endl;
-		std::cout << "Autoindex: " << std::endl;
-		std::cout << RED << this->_content << RST << std::endl;
+		this->_status_line = "HTTP/1.1 " + std::to_string(status_code) + " OK";
 	} else if (status_message == "CGI") {
 		// create CGI
-		return;
 	} else {
-		// file.open(path.c_str());
-		// if (!file.is_open()) {
-		// 	std::cerr << RED << "Error: Could open file with this file : " << path << RST << std::endl;
-		// 	return;
-		// }
+		file.open(path.c_str());
+		if (!file.is_open()) {
+			std::cerr << RED << "Error: Could open file with this file : " << path << RST << std::endl;
+			return;
+		}
 		while (std::getline(file, line)) {
 			content += line;
 			content += "\n";
 		}
 		this->_content = content;
+		this->_status_line = "HTTP/1.1 " + std::to_string(status_code) + " " + status_message;
 	}
-	this->_status_line = "HTTP/1.1 " + std::to_string(status_code) + " " + status_message;
 	init_headers();
 }
 
@@ -203,7 +170,7 @@ void Response::init_headers(void) {
 		for (std::map<std::string, std::string>::iterator it = this->_headers.begin(); it != this->_headers.end(); ++it) {
 			std::cout << it->first << it->second << std::endl;
 		}
-		std::cout << CYA << this->_content << RST << std::endl;
+		// std::cout << CYA << this->_content << RST << std::endl;
 	}
 	buildResponse();
 }
