@@ -123,7 +123,7 @@ void	Supervisor::closeClient(int client_socket){
 void	Supervisor::manageOperations(void){
 	while (1) {
 		this->_read_fds = this->_all_sockets;
-		//this->_write_fds = this->_all_sockets;
+		this->_write_fds = this->_all_sockets;
 		//this->_excep_fds = this->_all_sockets;
         if (select(this->_fd_max + 1, &(this->_read_fds), &(this->_write_fds), NULL, &(this->_timer)) == -1) {
             fprintf(stderr, "[Server] Select error: %s\n", strerror(errno));
