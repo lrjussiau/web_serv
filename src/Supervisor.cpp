@@ -3,7 +3,7 @@
 /* a faire: gere les fd set proprement, function pour tout shutdown, rrearranger function/ordre*/
 
 Supervisor::~Supervisor(void){
-	std::cout << GRN <<  "Closing all connections" << std::endl;
+	std::cout << GRN <<  "Closing all connections" << RST << std::endl;
 	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
 		close(it->first);
 	}
@@ -134,22 +134,22 @@ void	Supervisor::manageOperations(void){
 			if (FD_ISSET(fd, &(this->_read_fds)) != 0) {
 				if (isServer(fd)) {
 					if (DEBUG)
-						std::cout << GRN << "[Server "<< fd << "] A connection with a new client is made" << std::endl;
+						std::cout << GRN << "[Server "<< fd << "] A connection with a new client is made" << RST << std::endl;
 					acceptNewConnection(fd);
 				}
 				else {
 					if (DEBUG)
-						std::cout << GRN << "[Client:" << fd << "] A request has been sent" << std::endl;
+						std::cout << GRN << "[Client:" << fd << "] A request has been sent" << RST << std::endl;
 					readRequestFromClient(fd);
 				}
 			}
 			if (FD_ISSET(fd, &(this->_write_fds)) != 0) {
 				if (isServer(fd)) {
-					std::cout << RED << "[ERROR] Une socket server est ouverte pour lecture" << std::endl;
+					std::cout << RED << "[ERROR] Une socket server est ouverte pour lecture" << RST << std::endl;
 				}
 				else {
 					if (DEBUG)
-						std::cout << GRN <<"[Client:" << fd << "] A client is ready to receive a response" <<std::endl;
+						std::cout << GRN <<"[Client:" << fd << "] A client is ready to receive a response" << RST <<std::endl;
 					writeResponseToClient(fd);
 					
 				}
@@ -168,14 +168,14 @@ void Supervisor::acceptNewConnection(int server_socket){
     client_socket = accept(server_socket, NULL, NULL);
 	Client	new_client(server_socket, client_socket);
     if (client_socket == -1) {
-        std::cout << RED << "[Server " << server_socket << "] Accept error" << std::endl;
+        std::cout << RED << "[Server " << server_socket << "] Accept error" << RST << std::endl;
         return ;
     }
     FD_SET(client_socket, &(this->_read_fds));
 	FD_SET(client_socket, &(this->_all_sockets));
 	this->_clients_map[client_socket] = new_client;
 	updateFdMax();
-	std::cout << GRN << "[Server " << server_socket << "] Accepted new connection on client socket: " << client_socket << std::endl;
+	std::cout << GRN << "[Server " << server_socket << "] Accepted new connection on client socket: " << client_socket << RST << std::endl;
 }
 
 void Supervisor::readRequestFromClient(int client_socket){
@@ -186,10 +186,10 @@ void Supervisor::readRequestFromClient(int client_socket){
     bytes_read = recv(client_socket, &buffer, BUFSIZ, 0);
     if (bytes_read <= 0) {
         if (bytes_read == 0) {
-           std::cout << "[Client " << client_socket << "] socket closed connection." << GRN << std::endl;
+           std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
         }
         else {
-            std::cout << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" <<  std::endl;;
+            std::cout << GRN << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" << RST << std::endl;;
         }
 		closeClient(client_socket);
     }
@@ -208,11 +208,11 @@ void	Supervisor::writeResponseToClient(int client_socket){
 	FD_SET(client_socket, &(this->_read_fds));
 	FD_CLR(client_socket, &(this->_write_fds));
 	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1){
-		std::cout << RED << "[Server "<< client.getServerSocket() << "] Send error to client fd: " << client.getSocket() << std::endl;
+		std::cout << RED << "[Server "<< client.getServerSocket() << "] Send error to client fd: " << client.getSocket() << RST << std::endl;
 		//fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
 	}
 	else
-		std::cout << GRN << "successfully sent response" << GRN <<  std::endl; 
+		std::cout << GRN << "successfully sent response" << RST <<  std::endl; 
 
 }
 

@@ -39,3 +39,16 @@ std::string getTime(){
 	return std::string (buffer);
 }
 
+PathType getPathType(const std::string& path) {
+	struct stat pathStat;
+	if (stat(path.c_str(), &pathStat) != 0) {
+		return PATH_NOT_FOUND;
+	}
+	if (S_ISREG(pathStat.st_mode)) {
+		return PATH_IS_FILE;
+	}
+	if (S_ISDIR(pathStat.st_mode)) {
+		return PATH_IS_DIRECTORY;
+	}
+	return PATH_NOT_FOUND;
+}

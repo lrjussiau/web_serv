@@ -10,6 +10,7 @@ struct Location {
     std::string                 root;
     std::string                 upload_store;
     std::string                 cgi_pass;
+    std::vector<std::string>    cgi_extensions;
     bool                        autoindex;
 };
 

@@ -15,10 +15,8 @@ class Response {
 		std::string							_final_reply;
 
 		void 		buildResponse(void);
-		void		buildStatusLine(int status_code, std::string status_message);
-		void 		createContent(std::string path);	
+		void 		createContent(std::string path, int status_code, std::string status_message);	
 		void		init_headers(void);
-		bool		is_file_exist(const std::string& path);
 
 	public:
 		Response(void);

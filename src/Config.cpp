@@ -251,6 +251,12 @@ Location Config::parseLocationBlock(std::ifstream &file) {
         } else if (token == "cgi_pass") {
             iss >> location.cgi_pass;
             trimSemicolon(location.cgi_pass);
+        } else if (token == "cgi_extensions") {
+            std::string extension;
+            while (iss >> extension) {
+                trimSemicolon(extension);
+                location.cgi_extensions.push_back(extension);
+            }
         } else if (token == "autoindex") {
             std::string value;
             iss >> value;
@@ -301,6 +307,13 @@ void Config::printConfig() const {
             	std::cout << "\tCGI pass: " << loc.cgi_pass << std::endl;
 			if (loc.autoindex) 
             	std::cout << "\tAutoindex: on" << std::endl;
+            if (!loc.cgi_extensions.empty()) {
+                std::cout << "\tCGI extensions: ";
+                for (std::vector<std::string>::const_iterator ext_it = loc.cgi_extensions.begin(); ext_it != loc.cgi_extensions.end(); ++ext_it) {
+                    std::cout << *ext_it << " ";
+                }
+                std::cout << std::endl;
+            }
         }
     }
 }

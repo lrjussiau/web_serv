@@ -1,25 +1,5 @@
 #include "../inc/Response.hpp"
 
-enum PathType {
-    PATH_NOT_FOUND,
-    PATH_IS_FILE,
-    PATH_IS_DIRECTORY
-};
-
-PathType getPathType(const std::string& path) {
-	struct stat pathStat;
-	if (stat(path.c_str(), &pathStat) != 0) {
-		return PATH_NOT_FOUND;
-	}
-	if (S_ISREG(pathStat.st_mode)) {
-		return PATH_IS_FILE;
-	}
-	if (S_ISDIR(pathStat.st_mode)) {
-		return PATH_IS_DIRECTORY;
-	}
-	return PATH_NOT_FOUND;
-}
-
 void 		Response::buildResponse(void){
 	std::string	final_reply;
 
@@ -47,12 +27,10 @@ Response::Response(Client client, ServerConfig server) {
 
 	std::cout << GRN << "I am building a response from: " << server.server_name << std::endl;
 	if (client.getRequestMethod() != "GET" && client.getRequestMethod() != "POST" && client.getRequestMethod() != "DELETE") {
-		buildStatusLine(405, "Method Not Allowed");
-		createContent(server.root + server.error_pages[405]);
+		createContent(server.root + server.error_pages[405], 405, "Method Not Allowed");
 	}
 	// 	if () {																			// Look For Content-Length
-	// 	buildStatusLine(413, "Request Entity Too Large");
-	//  createContent( path_error_page + "413.html");
+	//  createContent(server.root + server.error_pages[413], 413, "Request Entity Too Large");
 
 	// Implement redirect 
 
@@ -77,27 +55,27 @@ Response::Response(Client client, ServerConfig server) {
                 path += "/index.html";
 			} else {
 				if (location.autoindex) {
-					// createContent(autoindex)
+					createContent(path, 0, "autoindex");
 				} else {
-					buildStatusLine(403, "Forbidden");
-					createContent(server.root + server.error_pages[403]);
+					createContent(server.root + server.error_pages[403], 403, "Forbidden");
 				}
 			}
 			break;
 		case PATH_NOT_FOUND:
-			buildStatusLine(404, "Not Found");
-			createContent(server.root + server.error_pages[404]);
+			createContent(server.root + server.error_pages[404], 404, "Not Found");
 			break;
 	}
-	// If extention CGI
-		// createContent(CGI) 
+	for (std::vector<std::string>::iterator it = location.cgi_extensions.begin(); it != location.cgi_extensions.end(); ++it) {
+		if (path.find(*it) != std::string::npos) {
+			createContent(path, 0, "CGI");
+		}
+	}
 	// If wrong mime type
 		// createContent(415)
 	if (client.getRequestMethod() == "POST") {
 		// createContent(201)
 	} else {
-		buildStatusLine(200, "OK");
-		createContent(path);
+		createContent(path, 200, "OK");
 	}
 }
 
@@ -111,23 +89,30 @@ Response::Response(const Response& src) {
 	return;
 }
 
-void Response::buildStatusLine(int status_code, std::string status_message) {
-	this->_status_line = "HTTP/1.1 " + std::to_string(status_code) + " " + status_message;
-}
+void Response::createContent(std::string path, int status_code, std::string status_message) {
+	std::ifstream	file;
+	std::string		line;
+	std::string		content;
 
-void Response::createContent(std::string path) {
-	std::ifstream file(path);
-	std::string line;
-
-	if (file.is_open()) {
-		while (std::getline(file, line)) {
-			this->_content += line + "\n";
-		}
-		file.close();
-	} else {
-		// throw Except("Fail to open file");
+	file.open(path.c_str());
+	if (!file.is_open()) {
+		std::cerr << RED << "Error: Could open file with this file : " << path << RST << std::endl;
+		return;
 	}
-	init_headers();
+	while (std::getline(file, line)) {
+		content += line;
+		content += "\n";
+	}
+	this->_content = content;
+
+	if (status_message == "autoindex") {
+		// create autoindex
+	} else if (status_message == "CGI") {
+		// create CGI
+	} else {
+		this->_status_line = "HTTP/1.1 " + std::to_string(status_code) + " " + status_message;
+		init_headers();
+	}
 }
 
 
@@ -142,7 +127,7 @@ void Response::init_headers(void) {
 		for (std::map<std::string, std::string>::iterator it = this->_headers.begin(); it != this->_headers.end(); ++it) {
 			std::cout << it->first << it->second << std::endl;
 		}
-		std::cout << this->_content << RST << std::endl;
+		std::cout << CYA << this->_content << RST << std::endl;
 	}
 	buildResponse();
 }
