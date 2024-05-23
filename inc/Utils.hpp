@@ -3,6 +3,12 @@
 
 #include "WebServ.hpp"
 
+enum PathType {
+    PATH_NOT_FOUND,
+    PATH_IS_FILE,
+    PATH_IS_DIRECTORY
+};
+
 class Except : public std::exception {
 private:
     std::string message;
@@ -27,6 +33,7 @@ public:
 };
 
 std::string getTime(void);
+PathType getPathType(const std::string& path);
 
 
 #endif

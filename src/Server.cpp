@@ -41,7 +41,7 @@ void	Server::createServer(ServerConfig server_config){
 				launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_ipv4);
 			}
 			catch (std::exception &e){
-        	std::cerr << RED << e.what() << std::endl;
+        	std::cerr << RED << e.what() << RST << std::endl;
 			}
 		}
     }
@@ -69,7 +69,7 @@ int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
         throw ServerSocketError();
     }
 	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
-        perror("setsockopt");
+        //perror("setsockopt");
         exit(EXIT_FAILURE);
     }
     if (bind(server_socket, (struct sockaddr *)&sa, sizeof sa)) {
@@ -80,6 +80,6 @@ int Server::launchSocket(uint32_t port, std::string ip, bool IPv4) {
         throw ServerListeningError();
     }
 	if (DEBUG)
-		std::cout << GRN << "[Server] Created server socket fd: " << server_socket << " at ip:port : " << ip << port << std::endl;
+		std::cout << GRN << "[Server] Created server socket fd: " << server_socket << " at ip:port : " << ip << ":" << port << RST << std::endl;
 	return (0);
 }
