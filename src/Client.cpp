@@ -32,6 +32,8 @@ Client&	Client::operator=(const Client& src){
 	this->_requestHost = src.getRequestHost();
 	this->_requestConnection = src.getRequestConnection();
 	this->_requestMimetype = src.getRequestMimetype();
+	this->_postName = src.getPostName();
+	this->_buffer = src.getBuffer();
 	return *this;
 }
 
@@ -44,6 +46,10 @@ void Client::setData(char *buffer){
 	std::string buffer_str(buffer);
 	std::string line;
 	std::istringstream buffer_stream(buffer_str);
+	std::string body;
+	std::string boundaryValue;
+
+	bool inBody = false;
 	int i = 0;
 	while(std::getline(buffer_stream, line)){
 		if (i == 0) {
@@ -66,8 +72,18 @@ void Client::setData(char *buffer){
 				this->_requestMimetype = token;
 			}
 		}
+		if (this->_requestMethod == "POST" && !boundaryValue.empty() && line.find(boundaryValue) != std::string::npos) {
+			inBody = true;
+		}
+		if (line.find("Content-Type:") != std::string::npos) {
+			boundaryValue = line.substr(line.find("boundary=") + 9);
+		}
+		if (inBody) {
+			body += line + "\n";
+		}
 		i++;
 	}
+	parsePostRequest(body);
 	if (DEBUG) {
 		std::cout << YEL << "Client Request:" << std::endl;
 		std::cout << "Request Host: " << this->_requestHost << std::endl;
@@ -79,6 +95,54 @@ void Client::setData(char *buffer){
 	}
 }
 
+std::string encloseCharsInQuotes(const std::string& input) {
+    if (input.empty()) {
+        return "''";
+    }
+
+    std::string result;
+    for (std::string::const_iterator it = input.begin(); it != input.end(); ++it) {
+        result += "'";
+        result += *it;
+        result += "' ";
+    }
+    // Remove the trailing space
+    if (!result.empty()) {
+        result.erase(result.size() - 1);
+    }
+    return result;
+}
+
+void Client::parsePostRequest(std::string &body){
+	std::string line;
+	std::istringstream buffer_stream(body);
+
+	bool inBody = false;
+	while(std::getline(buffer_stream, line)){
+
+		if (line.find("Content-Disposition:") != std::string::npos) {
+			std::istringstream iss(line);
+			std::string token;
+			while (iss >> token) {
+				if (token.find("filename=") != std::string::npos) {
+					_postName = token.substr(token.find("filename=") + 10);
+					_postName.erase(_postName.size() - 1);
+				}
+				if (!_postName.empty())
+					break;
+			}
+		}
+        if (inBody) {
+            _buffer += line + "\n";
+        }
+		if (line == "\r") {
+			if (inBody)
+				break;
+			inBody = true;
+		}
+	}
+	std::cout << "buffer :" << _buffer << std::endl;
+}
 // ------------------------------------------------------
 // 					     Getters
 // ------------------------------------------------------
@@ -113,4 +177,12 @@ std::string Client::getRequestConnection(void) const{
 
 std::string Client::getRequestMimetype(void) const{
 	return this->_requestMimetype;
+}
+
+std::string Client::getPostName(void) const{
+	return this->_postName;
+}
+
+std::string Client::getBuffer(void) const{
+	return this->_buffer;
 }

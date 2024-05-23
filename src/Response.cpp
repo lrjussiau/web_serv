@@ -93,6 +93,21 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 		createContent(server.root + server.error_pages[415], 415, "Unsupported Media Type");
 	}
 	if (client.getRequestMethod() == "POST") {
+		std::cout << RED << "POST" << std::endl;
+		std::cout << "POST NAME: " << client.getPostName() << std::endl;
+		std::cout << "POST BUFFER: " << client.getBuffer() << RST << std::endl;
+		char cwd[1024];
+		std::string path;
+		if (getcwd(cwd, sizeof(cwd)) != NULL) {
+			path = cwd;
+		}
+		std::cout << location.root << std::endl;
+		std::cout << location.path << std::endl;
+		path += location.root.erase(0, 1) + location.path + client.getPostName();
+		std::cout << "POST PATH: " << path << std::endl;
+		std::ofstream outFile(path.c_str());
+		outFile << client.getBuffer();
+		outFile.close(); 
 		// createContent(201)
 	} else {
 		createContent(path, 200, "OK");
