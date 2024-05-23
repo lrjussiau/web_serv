@@ -81,12 +81,12 @@ Response::Response(Client client, ServerConfig server) {
 }
 
 std::vector<std::string>	returnFiles(std::string dir_requested){
-	 std::vector<std::string>	files = listFiles(dir_requested);
+	 std::vector<std::string>	files;
 	 struct dirent* 			entry;
 
     DIR* dir = opendir(dir_requested.c_str());
     if (dir == NULL) {
-        std::cerr << "Error: Unable to open directory " << path << std::endl;
+        std::cerr << "Error: Unable to open directory " << dir_requested<< std::endl;
         return files;
     }
 
@@ -102,14 +102,14 @@ std::vector<std::string>	returnFiles(std::string dir_requested){
 
 void	Response::generateAutoIndex(std::string dir_requested){
 	std::string					auto_index;
-    std::vector<std::string>	files = listFiles(dir_requested);
+    std::vector<std::string>	files = returnFiles(dir_requested);
 
 	auto_index += "<!DOCTYPE html>\n<html>\n<head><title>" + dir_requested + "/</title></head>\n<body>\n";
 	auto_index += "<h1>"+ dir_requested + "/</h1><hr><pre><a href=\"../\">../</a>";
 	for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it){
 		auto_index += "<a href=\"" + *it + "/\">" + *it + "/</a>\n";     
 	}
-	auto_index += "</body>\n</html>\n"
+	auto_index += "</body>\n</html>\n";
 	this->_content = auto_index;
 }
 

@@ -27,6 +27,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <dirent.h>
 
 #include <sys/socket.h>
 #include <netinet/in.h>
