@@ -44,6 +44,11 @@ class Supervisor {
 		void		runServers(Config configuration);
 		void		updateFdMax(void);
 		void		writeResponseToClient(int client_socket);
+		/*void manageOperations(void);
+    	void acceptNewConnection(int server_socket, fd_set &read_fds);
+    	void readRequestFromClient(int client_socket, fd_set &read_fds, fd_set &write_fds);
+    	void writeResponseToClient(int client_socket, fd_set &read_fds, fd_set &write_fds);*/
+
 };
 
 #endif
