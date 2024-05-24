@@ -56,7 +56,6 @@ void Client::setData(char *buffer){
 			std::istringstream line_stream(line);
 			line_stream >> this->_requestMethod >> this->_requestedUrl >> this->_requestProtocol;
 		}
-		// std::cout << MAG << line << RST << std::endl;
 		if (line.find("Host:") != std::string::npos){
 			this->_requestHost = line.substr(6);
 		}
@@ -83,7 +82,8 @@ void Client::setData(char *buffer){
 		}
 		i++;
 	}
-	parsePostRequest(body);
+	if (this->_requestMethod == "POST")
+		parsePostRequest(body);
 	if (DEBUG) {
 		std::cout << YEL << "Client Request:" << std::endl;
 		std::cout << "Request Host: " << this->_requestHost << std::endl;
@@ -93,24 +93,6 @@ void Client::setData(char *buffer){
 		std::cout << "Request Connection: " << this->_requestConnection << std::endl;
 		std::cout << "Request Mimetype: " << this->_requestMimetype << RST << std::endl;
 	}
-}
-
-std::string encloseCharsInQuotes(const std::string& input) {
-    if (input.empty()) {
-        return "''";
-    }
-
-    std::string result;
-    for (std::string::const_iterator it = input.begin(); it != input.end(); ++it) {
-        result += "'";
-        result += *it;
-        result += "' ";
-    }
-    // Remove the trailing space
-    if (!result.empty()) {
-        result.erase(result.size() - 1);
-    }
-    return result;
 }
 
 void Client::parsePostRequest(std::string &body){
@@ -136,12 +118,9 @@ void Client::parsePostRequest(std::string &body){
             _buffer += line + "\n";
         }
 		if (line == "\r") {
-			if (inBody)
-				break;
 			inBody = true;
 		}
 	}
-	std::cout << "buffer :" << _buffer << std::endl;
 }
 // ------------------------------------------------------
 // 					     Getters

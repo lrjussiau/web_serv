@@ -190,6 +190,7 @@ void	Supervisor::readRequestFromClient(int client_socket){
 	std::cout << "request " << request << std::endl;
     if (bytes_read <= 0) {
         if (bytes_read == 0) {
+			perror("recv");
            std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
         }
         else {
@@ -200,18 +201,21 @@ void	Supervisor::readRequestFromClient(int client_socket){
     else {
 		FD_SET(client_socket, &(this->_write_fds));
 		FD_CLR(client_socket, &(this->_read_fds));
+		//FD_CLR(client_socket, &(this->_all_sockets));
 		this->_clients_map[client_socket].setData(buffer);
     }
 	return;
 }
 
 void	Supervisor::writeResponseToClient(int client_socket){
+	std::cout << "write response to client" << client_socket <<std::endl;
 	Client client = this->_clients_map[client_socket];
 	Server *server = this->_servers_map[client.getServerSocket()];
 	Response response(client, server->getServerConfig());
 
 	FD_SET(client_socket, &(this->_read_fds));
 	FD_CLR(client_socket, &(this->_write_fds));
+	//FD_CLR(client_socket, &(this->_all_sockets));
 	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1){
 		std::cout << RED << "[Server "<< client.getServerSocket() << "] Send error to client fd: " << client.getSocket() << RST << std::endl;
 		//fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
