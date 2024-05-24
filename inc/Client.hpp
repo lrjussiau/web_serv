@@ -18,6 +18,7 @@ class Client {
 		std::string _requestMimetype;
 		std::string _postName;
 		std::string _buffer;
+		std::string _boundary;
 
 		void	parsePostRequest(std::string &body);
 
