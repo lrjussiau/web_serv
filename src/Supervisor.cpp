@@ -274,15 +274,14 @@ void	Supervisor::manageOperations(void){
 }
 
 void Supervisor::acceptNewConnection(int server_socket){
-    int 	client_socket;
+    int 			client_socket;
+	struct linger	sl;
+	int 			opt = 1;
 
-    client_socket = accept(server_socket, NULL, NULL);
-	int opt = 1;
-    setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    // Set SO_LINGER to close sockets immediately
-    struct linger sl;
     sl.l_onoff = 1;
     sl.l_linger = 0;
+    client_socket = accept(server_socket, NULL, NULL);
+    setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
     setsockopt(client_socket, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
 	setNonBlocking(client_socket);
 	Client	new_client(server_socket, client_socket);

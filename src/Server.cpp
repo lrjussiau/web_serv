@@ -106,7 +106,7 @@ int Server::launchSocket(uint32_t port, std::string ip, bool domain_name) {
 		fprintf(stderr, "[Server] Binding error: %s\n", strerror(errno));
     	//throw ServerBindingError();
 	}
-    if (listen(server_socket, 10)) {
+    if (listen(server_socket, SOMAXCONN)) {
         throw ServerListeningError();
     }
 	if (DEBUG)
