@@ -52,3 +52,12 @@ PathType getPathType(const std::string& path) {
 	}
 	return PATH_NOT_FOUND;
 }
+
+int setNonBlocking(int fd) {
+    // Set the file descriptor to non-blocking mode
+    if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
+        perror("fcntl F_SETFL");
+        return -1;
+    }
+    return 0;
+}

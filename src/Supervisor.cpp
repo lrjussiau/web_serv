@@ -122,6 +122,7 @@ void	Supervisor::closeClient(int client_socket){
     FD_CLR(client_socket, &this->_read_fds);
     FD_CLR(client_socket, &this->_write_fds);
     this->_clients_map.erase(client_socket);
+	updateFdMax();
 
 }
 
@@ -276,6 +277,14 @@ void Supervisor::acceptNewConnection(int server_socket){
     int 	client_socket;
 
     client_socket = accept(server_socket, NULL, NULL);
+	int opt = 1;
+    setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+    // Set SO_LINGER to close sockets immediately
+    struct linger sl;
+    sl.l_onoff = 1;
+    sl.l_linger = 0;
+    setsockopt(client_socket, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+	setNonBlocking(client_socket);
 	Client	new_client(server_socket, client_socket);
     if (client_socket == -1) {
         std::cout << RED << "[Server " << server_socket << "] Accept error" << RST << std::endl;
@@ -295,7 +304,7 @@ void	Supervisor::readRequestFromClient(int client_socket){
 
     memset(&buffer, '\0', sizeof buffer);
 	std::cout << "client socket " << client_socket << std::endl;
-    bytes_read = recv(client_socket, &buffer, BUFSIZ, 0);
+    bytes_read = recv(client_socket, &buffer, BUFSIZ, MSG_DONTWAIT);
 	std::string request(buffer);
 	std::cout << "request " << request << std::endl;
     if (bytes_read <= 0) {
