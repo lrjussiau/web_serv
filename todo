@@ -2,12 +2,11 @@
 
 Most Important : 
 
-BAD FILE DESCRIPTOR
+
 
 ----
 
-Nom de domaine (Pas IPV6)
-Louis->remplacer le bool ipv4 par un bool is domain_name->Server::launchSocket()
+
 
 POST
 

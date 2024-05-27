@@ -42,24 +42,25 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	// Implement redirect
 	
 	for (std::map<std::string, Location>::iterator it = server.locations.begin(); it != server.locations.end(); ++it) {
-		if (client.getRequestedUrl() == it->first) {
+		if (client.getRequestedUrl().find(it->first + "/") != std::string::npos) {
 			if (!it->second.redirect.empty()){
 				std::cout << GRN << "A redirect response is made" << RST << std::endl;
 				buildRedirectResponse(it->second.redirect);
 				return;
 			}
-			// std::cout << "Location: " << it->first << std::endl;
-			// std::cout << "Location to find : " << client.getRequestedUrl() << std::endl;
+
  			location = it->second;
 			find_location = true;
+			std::cout << "Location found : " << location.root << std::endl;
 			break;
 		}
 	}
 	if (!find_location) {
-		path = server.root + client.getRequestedUrl();
+		path = server.root.erase(server.root.size() - 1) + client.getRequestedUrl();
+		std::cout << "No location, Path: " << path << std::endl;
 	} else {
 		path = location.root.erase(location.root.size() - 1) + client.getRequestedUrl();
-		// std::cout << "Path: " << path << std::endl;
+		std::cout << "Location, Path: " << path << std::endl;
 	}
 	PathType pathType = getPathType(path);
 	switch (pathType) {
@@ -90,6 +91,7 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	}
 	for (std::vector<std::string>::iterator it = location.cgi_extensions.begin(); it != location.cgi_extensions.end(); ++it) {
 		if (path.find(*it) != std::string::npos) {
+			// check CGI enter or not 
 			createContent(path, 0, "CGI");
 		}
 	}
@@ -97,21 +99,6 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 		createContent(server.root + server.error_pages[415], 415, "Unsupported Media Type");
 	}
 	if (client.getRequestMethod() == "POST") {
-		// // std::cout << RED << "POST" << std::endl;
-		// // std::cout << "POST NAME: " << client.getPostName() << std::endl;
-		// // std::cout << "POST BUFFER: " << client.getBuffer() << RST << std::endl;
-		// char cwd[1024];
-		// std::string path;
-		// if (getcwd(cwd, sizeof(cwd)) != NULL) {
-		// 	path = cwd;
-		// }
-		// // std::cout << location.root << std::endl;
-		// // std::cout << location.path << std::endl;
-		// path += location.root.erase(0, 1) + location.path + "/" + client.getPostName();
-		// // std::cout << "POST PATH: " << path << std::endl;
-		// std::ofstream outFile(path.c_str());
-		// outFile << client.getBuffer();
-		// outFile.close(); 
 		createContent("", 201, "Created");
 		return;
 	} else {
@@ -165,30 +152,35 @@ Response::Response(const Response& src) {
 }
 
 void Response::createContent(std::string path, int status_code, std::string status_message) {
-	std::ifstream	file;
-	std::string		line;
-	std::string		content;
+    std::ifstream file;
+    std::ostringstream content_stream;
+    std::string content;
 
-	if (status_message == "autoindex") {
-		this->_status_line = "HTTP/1.1 " + std::to_string(status_code) + " OK";
-	} else if (status_message == "CGI") {
-		// create CGI
-	} else {
-		file.open(path.c_str());
-		if (!file.is_open()) {
-			std::cerr << RED << "Error: Could open file with this file : " << path << RST << std::endl;
-			return;
-		}
-		while (std::getline(file, line)) {
-			content += line;
-			content += "\n";
-		}
-		this->_content = content;
-		this->_status_line = "HTTP/1.1 " + std::to_string(status_code) + " " + status_message;
-	}
-	init_headers();
+    if (status_message == "autoindex") {
+        std::stringstream ss;
+        ss << "HTTP/1.1 " << status_code << " OK";
+        this->_status_line = ss.str();
+    } else if (status_message == "CGI") {
+        // create CGI
+    } else {
+        file.open(path.c_str(), std::ios::binary);
+        if (!file.is_open()) {
+            std::cerr << RED << "Error: Could not open file: " << RST << path << std::endl;
+            return;
+        }
+
+        content_stream << file.rdbuf();
+        content = content_stream.str();
+
+        this->_content = content;
+
+        std::stringstream ss;
+        ss << "HTTP/1.1 " << status_code << " " << status_message;
+        this->_status_line = ss.str();
+    }
+
+    init_headers();
 }
-
 
 void Response::init_headers(void) {
 	this->_headers["Date: "] = getTime();

@@ -167,13 +167,13 @@ void Client::setData(char *buffer) {
 		_boundary = boundaryValue;	
         parsePostRequest(body);
     if (DEBUG) {
-        std::cout << "Client Request:" << std::endl;
+        std::cout << YEL << "Client Request:" << std::endl;
         std::cout << "Request Host: " << this->_requestHost << std::endl;
         std::cout << "Request Method: " << this->_requestMethod << std::endl;
         std::cout << "Requested URL: " << this->_requestedUrl << std::endl;
         std::cout << "Request Protocol: " << this->_requestProtocol << std::endl;
         std::cout << "Request Connection: " << this->_requestConnection << std::endl;
-        std::cout << "Request Mimetype: " << this->_requestMimetype << std::endl;
+        std::cout << "Request Mimetype: " << this->_requestMimetype << RST << std::endl;
     }
 }
 

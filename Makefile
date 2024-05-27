@@ -27,7 +27,7 @@ CURSIVE		=	\e[33;3m
 all: $(NAME)
 
 $(NAME): $(OBJ)
-	@$(CC) $(OBJ) -fsanitize=address -o $(NAME)
+	@$(CC) $(OBJ) -o $(NAME)
 	@printf "$(GREEN)- Executable ready.\n$(RESET)"
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HEADER)
