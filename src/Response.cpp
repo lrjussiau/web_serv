@@ -40,13 +40,16 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	//  createContent(server.root + server.error_pages[413], 413, "Request Entity Too Large");
 
 	// Implement redirect
+	
 	for (std::map<std::string, Location>::iterator it = server.locations.begin(); it != server.locations.end(); ++it) {
-		if (client.getRequestedUrl().find(it->first) != std::string::npos) {
+		if (client.getRequestedUrl() == it->first) {
 			if (!it->second.redirect.empty()){
 				std::cout << GRN << "A redirect response is made" << RST << std::endl;
 				buildRedirectResponse(it->second.redirect);
 				return;
 			}
+			// std::cout << "Location: " << it->first << std::endl;
+			// std::cout << "Location to find : " << client.getRequestedUrl() << std::endl;
  			location = it->second;
 			find_location = true;
 			break;
@@ -56,6 +59,7 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 		path = server.root + client.getRequestedUrl();
 	} else {
 		path = location.root.erase(location.root.size() - 1) + client.getRequestedUrl();
+		// std::cout << "Path: " << path << std::endl;
 	}
 	PathType pathType = getPathType(path);
 	switch (pathType) {
@@ -72,7 +76,7 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 						auto_index = cwd;
 					}
 					auto_index += location.root + client.getRequestedUrl();
-					std::cout << "AutoIndex: " << auto_index << std::endl;
+					// std::cout << "AutoIndex: " << auto_index << std::endl;
 					generateAutoIndex(auto_index);
 				} else {
 					createContent(server.root + server.error_pages[403], 403, "Forbidden");
@@ -93,22 +97,23 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 		createContent(server.root + server.error_pages[415], 415, "Unsupported Media Type");
 	}
 	if (client.getRequestMethod() == "POST") {
-		std::cout << RED << "POST" << std::endl;
-		std::cout << "POST NAME: " << client.getPostName() << std::endl;
-		std::cout << "POST BUFFER: " << client.getBuffer() << RST << std::endl;
-		char cwd[1024];
-		std::string path;
-		if (getcwd(cwd, sizeof(cwd)) != NULL) {
-			path = cwd;
-		}
-		std::cout << location.root << std::endl;
-		std::cout << location.path << std::endl;
-		path += location.root.erase(0, 1) + location.path + client.getPostName();
-		std::cout << "POST PATH: " << path << std::endl;
-		std::ofstream outFile(path.c_str());
-		outFile << client.getBuffer();
-		outFile.close(); 
-		// createContent(201)
+		// // std::cout << RED << "POST" << std::endl;
+		// // std::cout << "POST NAME: " << client.getPostName() << std::endl;
+		// // std::cout << "POST BUFFER: " << client.getBuffer() << RST << std::endl;
+		// char cwd[1024];
+		// std::string path;
+		// if (getcwd(cwd, sizeof(cwd)) != NULL) {
+		// 	path = cwd;
+		// }
+		// // std::cout << location.root << std::endl;
+		// // std::cout << location.path << std::endl;
+		// path += location.root.erase(0, 1) + location.path + "/" + client.getPostName();
+		// // std::cout << "POST PATH: " << path << std::endl;
+		// std::ofstream outFile(path.c_str());
+		// outFile << client.getBuffer();
+		// outFile.close(); 
+		createContent("", 201, "Created");
+		return;
 	} else {
 		createContent(path, 200, "OK");
 	}

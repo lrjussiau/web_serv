@@ -299,16 +299,17 @@ void Supervisor::acceptNewConnection(int server_socket){
 }
 
 void	Supervisor::readRequestFromClient(int client_socket){
-    char buffer[BUFSIZ];
+    char buffer[8000];
     int bytes_read;
 
     memset(&buffer, '\0', sizeof buffer);
 	std::cout << "client socket " << client_socket << std::endl;
-    bytes_read = recv(client_socket, &buffer, BUFSIZ, MSG_DONTWAIT);
+    bytes_read = recv(client_socket, &buffer, 8000, 0);
 	std::string request(buffer);
 	std::cout << "request " << request << std::endl;
     if (bytes_read <= 0) {
         if (bytes_read == 0) {
+			perror("recv");
            std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
         }
         else {
@@ -333,6 +334,7 @@ void	Supervisor::readRequestFromClient(int client_socket){
 
 //->connection reset by peer -> client socket = -1
 void	Supervisor::writeResponseToClient(int client_socket){
+	std::cout << "write response to client" << client_socket <<std::endl;
 	Client client = this->_clients_map[client_socket];
 	std::cout << "Clinet socket: " << client.getServerSocket() << std::endl;
 	//std::cout <<"HELLO" << std::endl;
