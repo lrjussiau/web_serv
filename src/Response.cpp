@@ -57,10 +57,8 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	}
 	if (!find_location) {
 		path = server.root.erase(server.root.size() - 1) + client.getRequestedUrl();
-		std::cout << "No location, Path: " << path << std::endl;
 	} else {
 		path = location.root.erase(location.root.size() - 1) + client.getRequestedUrl();
-		std::cout << "Location, Path: " << path << std::endl;
 	}
 	PathType pathType = getPathType(path);
 	switch (pathType) {

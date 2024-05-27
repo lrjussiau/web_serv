@@ -298,12 +298,12 @@ void Supervisor::acceptNewConnection(int server_socket){
 }
 
 void	Supervisor::readRequestFromClient(int client_socket){
-    char buffer[8000];
+    char buffer[100000];
     int bytes_read;
 
     memset(&buffer, '\0', sizeof buffer);
 	std::cout << "client socket " << client_socket << std::endl;
-    bytes_read = recv(client_socket, &buffer, 8000, 0);
+    bytes_read = recv(client_socket, &buffer, 100000, 0);
 	std::string request(buffer);
 	// std::cout << "request " << request << std::endl;
     if (bytes_read <= 0) {
