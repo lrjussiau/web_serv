@@ -33,7 +33,7 @@ class Config {
         std::vector<ServerConfig> _servers;
 
         void		parseServerBlock(std::ifstream &file, ServerConfig &server);
-        Location	parseLocationBlock(std::ifstream &file);
+        Location	parseLocationBlock(std::ifstream &file, std::string path);
 		void		loadFromFile(const std::string &filename);
 		void		printConfig() const;
 		int			parseSize(const std::string &size_str);

@@ -219,18 +219,19 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
         } else if (token == "location") {
 			std::string path;
 			iss >> path;
-            server.locations[path] = parseLocationBlock(file);
+            // server.locations[path].path = path;
+            server.locations[path] = parseLocationBlock(file, path);
         } else if (token == "}") {
             break;
         }
     }
 }
 
-Location Config::parseLocationBlock(std::ifstream &file) {
+Location Config::parseLocationBlock(std::ifstream &file, std::string path) {
     std::string line;
 	Location location;
 
-
+    location.path = path;
     while (std::getline(file, line)) {
         std::istringstream iss(line);
         std::string token;
@@ -296,7 +297,7 @@ void Config::printConfig() const {
 
         for (std::map<std::string, Location>::const_iterator loc_it = server.locations.begin(); loc_it != server.locations.end(); ++loc_it) {
             const Location& loc = loc_it->second;
-            std::cout << "Location path: " << loc_it->first << std::endl;
+            std::cout << "Location path: " << loc_it->second.path << std::endl;
             std::cout << "\tAllowed methods: ";
             for (std::vector<std::string>::const_iterator method_it = loc.allow_methods.begin(); method_it != loc.allow_methods.end(); ++method_it) {
                 std::cout << *method_it << " ";

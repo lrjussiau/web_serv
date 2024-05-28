@@ -14,13 +14,23 @@ class Response {
 		std::string							_content;
 		std::string							_final_reply;
 		Client								_client;
+		ServerConfig						_server;
 
 		void 		buildResponse(void);
 		void 		createContent(std::string path, int status_code, std::string status_message);
 		void		buildRedirectResponse(std::string redirect_path);
 		void		init_headers(void);
-		bool		checkMimeType(std::string mime);
+		void		createStatusLine(int status_code, std::string status_message);
+
+		void		handleDirectory(std::string path, Location *location);
 		void		generateAutoIndex(std::string dir_requested);
+		std::string generateCgi(std::string input_string);
+
+		bool		isMethodWrong();
+		bool		isCGI();
+		bool		checkMimeType();
+		Location*	findLocation();
+		std::string findPath(Location* location);
 
 	public:
 		Response(void);
