@@ -41,6 +41,15 @@ Client&	Client::operator=(const Client& src){
 // 					     Setters
 // ------------------------------------------------------
 
+std::string cleanString(const std::string& input) {
+    std::string output;
+    for (std::string::const_iterator it = input.begin(); it != input.end(); ++it) {
+        if (isprint(static_cast<unsigned char>(*it))) {
+            output += *it;
+        }
+    }
+    return output;
+}
 
 void Client::setData(char *buffer) {
     std::string buffer_str(buffer, 100000);
@@ -50,6 +59,7 @@ void Client::setData(char *buffer) {
     std::string boundaryValue;
 
     bool inBody = false;
+    bool findBoundary = false;
     int i = 0;
     while (std::getline(buffer_stream, line)) {
         if (i == 0) {
@@ -80,8 +90,9 @@ void Client::setData(char *buffer) {
             std::cout << "i got here and my buffer is" << this->_buffer << std::endl;
             break;
         }
-        if (line.find("Content-Type:") != std::string::npos) {
+        if (line.find("Content-Type:") != std::string::npos && !findBoundary) {
             boundaryValue = line.substr(line.find("boundary=") + 9);
+            findBoundary = true;
         }
         if (inBody) {
             std::cout << "line : " << line;
@@ -90,7 +101,7 @@ void Client::setData(char *buffer) {
         i++;
     }
     if (this->_requestMethod == "POST"){
-        _boundary = boundaryValue;
+        _boundary = cleanString(boundaryValue);
         parsePostRequest(body);
 
     }
@@ -110,9 +121,9 @@ void Client::parseCgiPostRequest(std::string &body){
     std::string line;
     std::istringstream buffer_stream(body);
 
-    std::cout << "here is the body for cgi " << std::cout;
+    std::cout << "here is the body for cgi " << std::endl;
     while (std::getline(buffer_stream, line)){
-        std::cout << line << std::cout;
+        std::cout << line << std::endl;
     }
     return;
 }
@@ -122,7 +133,6 @@ void Client::parsePostRequest(std::string &body) {
     std::string line;
     std::istringstream buffer_stream(body);
     bool inBody = false;
-    std::string boundaryValue = "--" + _boundary;
     std::ofstream file;
     
     while (std::getline(buffer_stream, line)) {
@@ -133,28 +143,30 @@ void Client::parsePostRequest(std::string &body) {
                 if (token.find("filename=") != std::string::npos) {
                     _postName = token.substr(token.find("filename=") + 10);
                     _postName.erase(_postName.size() - 1);
-                    file.open(_postName, std::ios::binary); // Open file in binary mode
+                    file.open(_postName, std::ios::binary);
                 }
                 if (!_postName.empty())
                     break;
             }
         }
         if (line == "\r") {
-            inBody = true; // File content starts after an empty line
+            inBody = true;
             continue;
         }
         if (inBody) {
-            if (line.find(boundaryValue) != std::string::npos) {
+            if (line.find(_boundary) != std::string::npos) {
+                std::cout << RED << "OK" << RST << std::endl;
                 inBody = false;
                 file.close();
+                break;
             } else {
-                file.write(line.c_str(), line.size()); // Write binary data to file
-                file.write("\n", 1); // Maintain the new line character
+                file.write(line.c_str(), line.size());
+                file.write("\n", 1);
             }
         }
     }
     if (file.is_open()) {
-        file.close(); // Ensure the file is closed if the boundary was not found
+        file.close();
     }
 }
 
