@@ -304,8 +304,6 @@ void	Supervisor::readRequestFromClient(int client_socket){
     memset(&buffer, '\0', sizeof buffer);
 	std::cout << "client socket " << client_socket << std::endl;
     bytes_read = recv(client_socket, &buffer, 100000, 0);
-	std::string request(buffer);
-	// std::cout << "request " << request << std::endl;
     if (bytes_read <= 0) {
         if (bytes_read == 0) {
 			perror("recv");

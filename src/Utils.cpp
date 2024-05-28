@@ -41,6 +41,7 @@ std::string getTime(){
 
 PathType getPathType(const std::string& path) {
 	struct stat pathStat;
+    std::cout << "path: " << path <<std::endl;
 	if (stat(path.c_str(), &pathStat) != 0) {
 		return PATH_NOT_FOUND;
 	}

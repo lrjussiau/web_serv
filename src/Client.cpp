@@ -87,7 +87,6 @@ void Client::setData(char *buffer) {
         //cgi
         if (this->_requestedUrl == "/cgi" && line.find("input") != std::string::npos){
             this->_buffer = line.substr(6, line.length() - 6);
-            std::cout << "i got here and my buffer is" << this->_buffer << std::endl;
             break;
         }
         if (line.find("Content-Type:") != std::string::npos && !findBoundary) {

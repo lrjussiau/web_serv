@@ -140,12 +140,11 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 	
 	if (client.getRequestMethod() == "POST" && client.getRequestedUrl() == "/cgi") {
 		this->_content = generateCgi(client.getBuffer());
-		std::cout << "Content" << this->_content <<std::endl;
 		createContent("", 201, "CGI");
 		return;
 	}
 	for (std::map<std::string, Location>::iterator it = server.locations.begin(); it != server.locations.end(); ++it) {
-		if (client.getRequestedUrl().find(it->first + "/") != std::string::npos) {
+		if (client.getRequestedUrl() == it->first) {
 			if (!it->second.redirect.empty()){
 				std::cout << GRN << "A redirect response is made" << RST << std::endl;
 				buildRedirectResponse(it->second.redirect);
@@ -158,17 +157,21 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 			break;
 		}
 	}
+	std::cout << "req url: " << client.getRequestedUrl() << std::endl;
 	if (!find_location) {
 		path = server.root.erase(server.root.size() - 1) + client.getRequestedUrl();
 	} else {
 		path = location.root.erase(location.root.size() - 1) + client.getRequestedUrl();
 	}
 	PathType pathType = getPathType(path);
+	std::cout << "path type: " << path << std::endl;
 	switch (pathType) {
 		case PATH_IS_FILE:
 			break;
 		case PATH_IS_DIRECTORY:
-			if (getPathType(path + "/index.html") == PATH_IS_FILE) {
+			if (client.getRequestMethod() == "POST") {
+				break;
+			} else if (getPathType(path + "/index.html") == PATH_IS_FILE) {
                 path += "/index.html";
 			} else {
 				if (location.autoindex) {
@@ -187,6 +190,7 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 			}
 			break;
 		case PATH_NOT_FOUND:
+			std::cout << " yeah boy" << std::endl;
 			createContent(server.root + server.error_pages[404], 404, "Not Found");
 			break;
 	}
@@ -225,6 +229,11 @@ void Response::createContent(std::string path, int status_code, std::string stat
         ss << "HTTP/1.1 " << status_code << " OK";
         this->_status_line = ss.str();
         std::cout << "content?: " << content << std::endl;
+	} else if (_client.getRequestMethod() == "POST") {
+		std::cout << BLU << " yeah post" << RST << std::endl;
+		std::stringstream ss;
+        ss << "HTTP/1.1 " << status_code << " " << status_message;
+        this->_status_line = ss.str();
     } else {
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
