@@ -74,17 +74,26 @@ void Client::setData(char *buffer) {
         if (this->_requestMethod == "POST" && !boundaryValue.empty() && line.find(boundaryValue) != std::string::npos) {
             inBody = true;
         }
+        //cgi
+        if (this->_requestedUrl == "/cgi" && line.find("input") != std::string::npos){
+            this->_buffer = line.substr(6, line.length() - 6);
+            std::cout << "i got here and my buffer is" << this->_buffer << std::endl;
+            break;
+        }
         if (line.find("Content-Type:") != std::string::npos) {
             boundaryValue = line.substr(line.find("boundary=") + 9);
         }
         if (inBody) {
+            std::cout << "line : " << line;
             body += line + "\n";
         }
         i++;
     }
-    if (this->_requestMethod == "POST")
-		_boundary = boundaryValue;	
+    if (this->_requestMethod == "POST"){
+        _boundary = boundaryValue;
         parsePostRequest(body);
+
+    }
     if (DEBUG) {
         std::cout << YEL << "Client Request:" << std::endl;
         std::cout << "Request Host: " << this->_requestHost << std::endl;
@@ -93,8 +102,21 @@ void Client::setData(char *buffer) {
         std::cout << "Request Protocol: " << this->_requestProtocol << std::endl;
         std::cout << "Request Connection: " << this->_requestConnection << std::endl;
         std::cout << "Request Mimetype: " << this->_requestMimetype << RST << std::endl;
+        std::cout << "Request Buffer: " << this->_buffer << RST << std::endl;
     }
 }
+
+void Client::parseCgiPostRequest(std::string &body){
+    std::string line;
+    std::istringstream buffer_stream(body);
+
+    std::cout << "here is the body for cgi " << std::cout;
+    while (std::getline(buffer_stream, line)){
+        std::cout << line << std::cout;
+    }
+    return;
+}
+
 
 void Client::parsePostRequest(std::string &body) {
     std::string line;

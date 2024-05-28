@@ -322,7 +322,7 @@ void	Supervisor::readRequestFromClient(int client_socket){
     else {
 		buffer[bytes_read] = '\0';
 		std::string request(buffer);
-        // std::cout << "request " << request << std::endl;
+        std::cout << "request " << request << std::endl;
 		FD_SET(client_socket, &(this->_write_fds));
 		FD_CLR(client_socket, &(this->_read_fds));
 		//FD_CLR(client_socket, &(this->_all_sockets));
@@ -335,7 +335,7 @@ void	Supervisor::readRequestFromClient(int client_socket){
 void	Supervisor::writeResponseToClient(int client_socket){
 	std::cout << "write response to client" << client_socket <<std::endl;
 	Client client = this->_clients_map[client_socket];
-	std::cout << "Clinet socket: " << client.getServerSocket() << std::endl;
+	std::cout << "Client socket: " << client.getServerSocket() << std::endl;
 	//std::cout <<"HELLO" << std::endl;
 	Server *server = this->_servers_map[client.getServerSocket()];
 	ServerConfig conf = server->getServerConfig();

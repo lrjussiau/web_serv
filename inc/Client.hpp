@@ -41,6 +41,7 @@ class Client {
 		std::string getRequestMimetype(void) const;
 		std::string getPostName(void) const;
 		std::string getBuffer(void) const;
+		void parseCgiPostRequest(std::string &body);
 };
 
 #endif
