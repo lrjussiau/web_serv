@@ -6,6 +6,8 @@
 #  define DEBUG 0
 # endif
 
+# define DEBUG_REPONSE 1
+
 // COLORS
 #define RST "\033[0m"
 #define RED "\033[1;31m"
