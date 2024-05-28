@@ -54,11 +54,35 @@ PathType getPathType(const std::string& path) {
 	return PATH_NOT_FOUND;
 }
 
-int setNonBlocking(int fd) {
-    // Set the file descriptor to non-blocking mode
+void    setNonBlocking(int fd, int server) {
+    struct linger	sl;
+	int 			opt = 1;
+
+    sl.l_onoff = 1;
+    sl.l_linger = 0;
     if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
         perror("fcntl F_SETFL");
-        return -1;
+        exit(EXIT_FAILURE);
     }
-    return 0;
+    if (server){
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
+        }
+	    if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+		    perror("setsockopt SO_REUSEPORT");
+		    exit(EXIT_FAILURE);
+	    }
+    }
+    else{
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
+        }
+        if (setsockopt(fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl))){
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
+        }
+    }
+    return;
 }

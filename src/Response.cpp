@@ -28,7 +28,7 @@ void	Response::buildRedirectResponse(std::string redirect_path){
 }
 
 std::string generateCgi(std::string input_string){
-    std::string cgi_page;
+    //std::string cgi_page;
     std::string encoded_string;
 
     int pipefd[2];
@@ -50,7 +50,7 @@ std::string generateCgi(std::string input_string){
 
         // Prepare the arguments for execve
         char *args[] = {const_cast<char *>("python3"),
-                        const_cast<char *>("website/cgi/encode_base64.py"),
+                        const_cast<char *>("website/cgi/base64encoder.py"),
                         const_cast<char *>(input_string.c_str()),
                         NULL};
 
@@ -73,15 +73,15 @@ std::string generateCgi(std::string input_string){
         int status;
         waitpid(pid, &status, 0);
     }
-	if (!encoded_string.empty() && encoded_string.back() == '\n') {
+	/*if (!encoded_string.empty() && encoded_string.back() == '\n') {
             encoded_string.erase(encoded_string.size() - 1);
-    }
+    }*/
 	std::cout << "encoded string " << encoded_string << std::endl;
-    cgi_page += "<!DOCTYPE html>\n<html>\n<h1>Here is your encoded string</h1>\n<body>\n";
-    cgi_page += "<h3>" + encoded_string + "</h3>\n";
-    cgi_page += "</body>\n</html>\n";
+    //cgi_page += "<!DOCTYPE html>\n<html>\n<h1>Here is your encoded string</h1>\n<body>\n";
+    //cgi_page += "<h3>" + encoded_string + "</h3>\n";
+    //cgi_page += "</body>\n</html>\n";
 
-    return cgi_page;
+    return encoded_string;
 }
 
 
@@ -138,7 +138,7 @@ Response::Response(Client client, ServerConfig server) : _client(client) {
 
 	// Implement redirect
 	
-	if (client.getRequestMethod() == "POST" && client.getRequestedUrl() == "/cgi") {
+	if (client.getRequestMethod() == "POST" && client.getRequestedUrl() == "/cgi/base64encoder.py") {
 		this->_content = generateCgi(client.getBuffer());
 		createContent("", 201, "CGI");
 		return;

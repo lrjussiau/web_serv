@@ -79,7 +79,6 @@ std::string	resolveDomainToIp(std::string domain_name){
 int Server::launchSocket(uint32_t port, std::string ip, bool domain_name) {
 	struct sockaddr_in sa;
 	int					server_socket;
-	int					opt = 1;
 
     memset(&sa, 0, sizeof sa);
 	if (!domain_name)
@@ -89,19 +88,11 @@ int Server::launchSocket(uint32_t port, std::string ip, bool domain_name) {
 	sa.sin_family = AF_INET;
     sa.sin_port = htons(port);
 	server_socket = socket(sa.sin_family, SOCK_STREAM, 0);
-	setNonBlocking(server_socket);
+	setNonBlocking(server_socket, 1);
     this->_sockets.push_back(server_socket);
     if (server_socket == -1) {
         throw ServerSocketError();
     }
-	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
-        //perror("setsockopt");
-        exit(EXIT_FAILURE);
-    }
-	if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
-		perror("setsockopt SO_REUSEPORT");
-		exit(EXIT_FAILURE);
-	}
     if (bind(server_socket, (struct sockaddr *)&sa, sizeof sa)) {
 		fprintf(stderr, "[Server] Binding error: %s\n", strerror(errno));
     	//throw ServerBindingError();

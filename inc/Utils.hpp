@@ -34,7 +34,7 @@ public:
 
 std::string getTime(void);
 PathType getPathType(const std::string& path);
-int setNonBlocking(int fd);
+void    setNonBlocking(int fd, int server);
 
 #endif
 

@@ -1,7 +1,5 @@
 #include "../inc/Supervisor.hpp"
 
-/* a faire: gere les fd set proprement, function pour tout shutdown, rrearranger function/ordre*/
-
 Supervisor::~Supervisor(void){
 	std::cout << GRN <<  "Closing all connections" << RST << std::endl;
 	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
@@ -111,129 +109,17 @@ void	Supervisor::removeClientsFromServer(int server_socket){
 }
 
 void	Supervisor::closeClient(int client_socket){
-	/*std::map<int, Client>::iterator it = this->_clients_map.find(client_socket);
+	std::map<int, Client>::iterator it = this->_clients_map.find(client_socket);
 
-	FD_CLR(client_socket, &(this->_read_fds));
-	this->_clients_map.erase(it);
-	updateFdMax();
-	close(client_socket);*/
 	close(client_socket);
     FD_CLR(client_socket, &this->_all_sockets);
     FD_CLR(client_socket, &this->_read_fds);
     FD_CLR(client_socket, &this->_write_fds);
-    this->_clients_map.erase(client_socket);
+    //this->_clients_map.erase(client_socket);
+	this->_clients_map.erase(it);
 	updateFdMax();
 
 }
-
-//envoyer 2 requetes pour que ca marche??
-/*void Supervisor::manageOperations(void) {
-    while (1) {
-        fd_set read_fds = this->_all_sockets;
-        fd_set write_fds = this->_all_sockets;
-        struct timeval timeout = {5, 0}; // Adjust as needed
-
-        std::cout << YEL << "[Servers] Waiting..." << RST << std::endl;
-		std::cout << "fdmax: " << this->_fd_max << std::endl;
-        if (select(this->_fd_max + 1, &read_fds, &write_fds, NULL, &timeout) == -1) {
-            fprintf(stderr, "[Server] Select error: %s\n", strerror(errno));
-            exit(1);
-        }
-
-        for (int fd = 0; fd <= this->_fd_max; fd++) {
-            if (FD_ISSET(fd, &read_fds)) {
-                if (isServer(fd)) {
-                    if (DEBUG) {
-                        std::cout << GRN << "[Server " << fd << "] A connection with a new client is made" << RST << std::endl;
-                    }
-                    acceptNewConnection(fd, read_fds);
-                } else {
-                    if (DEBUG) {
-                        std::cout << GRN << "[Client:" << fd << "] A request has been sent" << RST << std::endl;
-                    }
-                    readRequestFromClient(fd, read_fds, write_fds);
-                }
-            }
-
-            if (FD_ISSET(fd, &write_fds)) {
-                if (!isServer(fd)) {
-                    if (DEBUG) {
-                        std::cout << GRN << "[Client:" << fd << "] A client is ready to receive a response" << RST << std::endl;
-                    }
-                    writeResponseToClient(fd, read_fds, write_fds);
-					FD_CLR(fd, &write_fds);
-                }
-            }
-        }
-    }
-}
-
-void Supervisor::acceptNewConnection(int server_socket, fd_set &read_fds) {
-	(void)read_fds;
-    int client_socket = accept(server_socket, NULL, NULL);
-    if (client_socket == -1) {
-        std::cout << RED << "[Server " << server_socket << "] Accept error" << RST << std::endl;
-        return;
-    }
-
-    Client new_client(server_socket, client_socket);
-    this->_clients_map[client_socket] = new_client;
-
-    //FD_SET(client_socket, &read_fds);
-    FD_SET(client_socket, &this->_all_sockets);
-    updateFdMax();
-    std::cout << GRN << "[Server " << server_socket << "] Accepted new connection on client socket: " << client_socket << RST << std::endl;
-}
-
-void Supervisor::readRequestFromClient(int client_socket, fd_set &read_fds, fd_set &write_fds) {
-	(void)read_fds;
-	(void)write_fds;
-    char buffer[BUFSIZ];
-    int bytes_read;
-
-    memset(&buffer, '\0', sizeof buffer);
-    std::cout << "client socket " << client_socket << std::endl;
-    bytes_read = recv(client_socket, &buffer, BUFSIZ, MSG_DONTWAIT);
-    std::string request(buffer);
-    std::cout << "request " << request << std::endl;
-
-    if (bytes_read <= 0) {
-        if (bytes_read == 0) {
-            std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
-        } else {
-            perror("recv:");
-        }
-        closeClient(client_socket);
-    } else {
-        this->_clients_map[client_socket].setData(buffer);
-        //FD_SET(client_socket, &write_fds);
-        //FD_CLR(client_socket, &read_fds);
-		//FD_CLR(client_socket, &(this->_all_sockets));
-		(void)read_fds;
-		(void)write_fds;
-    }
-}
-
-void Supervisor::writeResponseToClient(int client_socket, fd_set &read_fds, fd_set &write_fds) {
-	(void)read_fds;
-	(void)write_fds;
-    Client& client = this->_clients_map[client_socket];
-    Server* server = this->_servers_map[client.getServerSocket()];
-    ServerConfig conf = server->getServerConfig();
-    Response response(client, conf);
-
-    // Send the response
-    if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), 0) == -1) {
-        std::cout << RED << "[Server " << client.getServerSocket() << "] Send error to client fd: " << client.getSocket() << RST << std::endl;
-        closeClient(client_socket);
-    } else {
-        std::cout << ORG << "Successfully sent response" << RST << std::endl;
-    }
-
-    // Re-enable the socket for reading, and disable it for writing
-    //FD_SET(client_socket, &read_fds);
-	//FD_CLR(client_socket, &(this->_all_sockets));
-}*/
 
 void	Supervisor::manageOperations(void){
 	while (1) {
@@ -275,15 +161,10 @@ void	Supervisor::manageOperations(void){
 
 void Supervisor::acceptNewConnection(int server_socket){
     int 			client_socket;
-	struct linger	sl;
-	int 			opt = 1;
 
-    sl.l_onoff = 1;
-    sl.l_linger = 0;
     client_socket = accept(server_socket, NULL, NULL);
-    setsockopt(client_socket, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-    setsockopt(client_socket, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
-	setNonBlocking(client_socket);
+	/*set new session id to this client attribute  + set info in map<std::string cookie, std::string attrinbutes>*/
+	setNonBlocking(client_socket, 0);
 	Client	new_client(server_socket, client_socket);
     if (client_socket == -1) {
         std::cout << RED << "[Server " << server_socket << "] Accept error" << RST << std::endl;
@@ -302,6 +183,7 @@ void	Supervisor::readRequestFromClient(int client_socket){
     int bytes_read;
 
     memset(&buffer, '\0', sizeof buffer);
+	/*check if cookie in request -> if yes ->check if exist in server->*/
 	std::cout << "client socket " << client_socket << std::endl;
     bytes_read = recv(client_socket, &buffer, 100000, 0);
     if (bytes_read <= 0) {
@@ -312,9 +194,7 @@ void	Supervisor::readRequestFromClient(int client_socket){
         else {
 			std::cout << "recv error: " << strerror(errno) << std::endl;
 			perror("recv:");
-            //std::cout << GRN << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" << RST << std::endl;
         }
-		//close(client_socket);
 		closeClient(client_socket);
     }
     else {
@@ -323,31 +203,24 @@ void	Supervisor::readRequestFromClient(int client_socket){
         std::cout << "request " << request << std::endl;
 		FD_SET(client_socket, &(this->_write_fds));
 		FD_CLR(client_socket, &(this->_read_fds));
-		//FD_CLR(client_socket, &(this->_all_sockets));
 		this->_clients_map[client_socket].setData(buffer);
     }
 	return;
 }
 
+/*add set-cookie header with attributes from client*/
 //->connection reset by peer -> client socket = -1
 void	Supervisor::writeResponseToClient(int client_socket){
-	std::cout << "write response to client" << client_socket <<std::endl;
 	Client client = this->_clients_map[client_socket];
-	std::cout << "Client socket: " << client.getServerSocket() << std::endl;
-	//std::cout <<"HELLO" << std::endl;
 	Server *server = this->_servers_map[client.getServerSocket()];
 	ServerConfig conf = server->getServerConfig();
-	//std::cout <<"HELLO" << std::endl;
-	//std::cout <<server->getServerConfig().server_name<< std::endl;
 	Response response(client, server->getServerConfig());
-	//std::cout <<"HELLO" << std::endl;
 
 	FD_SET(client_socket, &(this->_read_fds));
 	FD_CLR(client_socket, &(this->_write_fds));
 	//FD_CLR(client_socket, &(this->_all_sockets));
 	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1){
 		std::cout << RED << "[Server "<< client.getServerSocket() << "] Send error to client fd: " << client.getSocket() << RST << std::endl;
-		//fprintf(stderr, "[Server] Send error to client fd %d: %s\n", client.getServerSocket(), strerror(errno));
 	}
 	else
 		std::cout << ORG << "successfully sent response" << RST <<  std::endl; 
