@@ -27,7 +27,6 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 	Location* 	location;
 
 	std::cout << ORG << "[Server : " << server.server_name << "] build a response" << RST << std::endl;
-	std::cout << ORG << "Client :" << _client->getSessionName() << RST << std::endl;
 	if (DEBUG_REPONSE) {
 		std::cout << GRN << "Debug Reponse Path :" << RST << std::endl;
 	}
@@ -105,6 +104,14 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 		client->parsePostRequest(PATH_TO_REQUESTS, path);
 		createContent("./website/html/sucess.html", 201, "Created");
 		return;
+	} else if (client->getRequestMethod() == "DELETE") {
+		if (DEBUG_REPONSE) {
+			std::cout << "\t| " << "Path to delete : " << GRN << path << RST << std::endl;
+			std::cout << "\t| " << GRN << "Create a 204 request" << RST << std::endl;
+		}
+		unlink(path.c_str());
+		createContent("", 204, "DELETE");
+		return;
 	} else {
 		if (DEBUG_REPONSE) {
 		std::cout << "\t| " << GRN << "Create a 200 request" << RST << std::endl;
@@ -121,7 +128,9 @@ bool Response::checkMimeType() {
 
 	std::string mime = _client->getRequestMimetype();
 
-	if (mime != "text/html" && mime != "text/css" 
+	if (mime[mime.size() - 1] == '\r')
+		mime.erase(mime.size() - 1);
+	if (mime != "text/html" && mime != "text/css"  && mime != "*/*" 
 		&& mime != "text/javascript" && mime != "image/png" 
 		&& mime != "image/jpg" && mime != "image/jpeg" && mime != "image/gif" 
 		&& mime != "image/bmp" && mime != "image/webp" && mime != "image/avif"
@@ -144,7 +153,6 @@ bool	Response::isMethodWrong() {
 }
 
 bool	Response::isCookie(Client *client) {
-	//std::cout << "mur " << client->getRequestedUrl() << std::endl;
 	if (client->getRequestedUrl() == "/cookie" ){
 		std::cout << "I am in the post for cookie" <<std::endl;
 		client->setSessionName(_client->getBuffer());
@@ -155,7 +163,6 @@ bool	Response::isCookie(Client *client) {
 }
 
 bool	Response::isCGI() {
-	std::cout << "CGI" << _client->getRequestedUrl() << std::endl;
 	if (_client->getRequestMethod() == "POST" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
 		this->_content = generateCgi(_client->getBuffer());
 		createContent("", 201, "CGI");
@@ -209,8 +216,7 @@ void Response::createContent(std::string path, int status_code, std::string stat
     std::ostringstream content_stream;
     std::string content;
 
-	std::cout << "Path: " << path << std::endl;
-    if (status_message != "autoindex" && status_message != "CGI" && _client->getRequestMethod() != "POST"){
+    if (status_message != "autoindex" && status_message != "CGI" && _client->getRequestMethod() != "DELETE"){
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
             std::cerr << RED << "Error: Could not open file: " << RST << path << std::endl;

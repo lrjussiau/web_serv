@@ -10,7 +10,6 @@ Client::Client(void) : _socket(-1), _server_socket(-1){
 }
 
 Client::Client(int server_socket, int client_socket, std::string sessionId) : _socket(client_socket), _server_socket(server_socket),  _sessionId(sessionId), _sessionName("stranger"){
-    std::cout << "client constructor called" << std::endl;
 	return;
 }
 
@@ -127,7 +126,7 @@ void Client::parseCgiPostRequest(std::string &body){
 
 void Client::parsePostRequest(std::string path_to_request, std::string path) {
     std::string line;
-    // bool inBody = false;
+    bool chunk = false;
     bool inBound = false;
     bool findBoundary = false;
 
@@ -146,12 +145,48 @@ void Client::parsePostRequest(std::string path_to_request, std::string path) {
             _boundary = line.substr(line.find("boundary=") + 9);
             findBoundary = true;
         }
+        if (line.find("Transfer-Encoding: chunked") != std::string::npos) {
+            chunk = true;
+        }
         if (inBound) {
-			parseBody(request_file, path);
+            if (chunk) {
+                parseChunkedBody(request_file, path);
+            } else {
+                parseBody(request_file, path);
+            }
 			break;
         }
     }
     request_file.close();
+}
+
+void Client::parseChunkedBody(std::ifstream &request_file, std::string path) {
+    std::string line;
+    std::string chunkSize;
+    std::string chunk;
+    std::ofstream file;
+
+    while (std::getline(request_file, line)) {
+        if (line == "\r") {
+            continue;
+        }
+        if (line.find("0") != std::string::npos) {
+            break;
+        }
+        chunkSize = line;
+        chunkSize.erase(chunkSize.size() - 1);
+        int size = std::stoi(chunkSize, 0, 16);
+        file.open(path + "/" + _postName, std::ios::binary | std::ios::app);
+        if (!file.is_open()) {
+            std::cerr << "Failed to open file: " << path + "/" + _postName << std::endl;
+            return;
+        }
+        for (int i = 0; i < size; i++) {
+            request_file.get();
+            file.put(request_file.get());
+        }
+        file.close();
+    }
 }
 
 void Client::parseBody(std::ifstream &request_file, std::string path) {
