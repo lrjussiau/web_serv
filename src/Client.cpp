@@ -89,7 +89,7 @@ void Client::setData(std::string filePath) {
             }
         }
         //cgi
-        if (this->_requestedUrl == "/cgi" && line.find("input") != std::string::npos) {
+        if (this->_requestedUrl == "/cgi-bin" && line.find("input") != std::string::npos) {
             this->_buffer = line.substr(6, line.length() - 6);
             break;
         }

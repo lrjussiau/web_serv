@@ -74,7 +74,7 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 				}
 				break;
 			case PATH_IS_DIRECTORY:
-				if (getPathType(path + "/index.html") == PATH_IS_FILE) {
+				if (getPathType(path + "index.html") == PATH_IS_FILE) {
 					if (DEBUG_REPONSE) {
 						std::cout << "\t| " << GRN << "\t is a directory, but find index.html inside" << RST << std::endl;
 					}
@@ -144,7 +144,7 @@ bool	Response::isMethodWrong() {
 }
 
 bool	Response::isCookie(Client *client) {
-	std::cout << "mur " << client->getRequestedUrl() << std::endl;
+	//std::cout << "mur " << client->getRequestedUrl() << std::endl;
 	if (client->getRequestedUrl() == "/cookie" ){
 		std::cout << "I am in the post for cookie" <<std::endl;
 		client->setSessionName(_client->getBuffer());
@@ -155,7 +155,8 @@ bool	Response::isCookie(Client *client) {
 }
 
 bool	Response::isCGI() {
-	if (_client->getRequestMethod() == "POST" && _client->getRequestedUrl() == "/cgi") {
+	std::cout << "CGI" << _client->getRequestedUrl() << std::endl;
+	if (_client->getRequestMethod() == "POST" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
 		this->_content = generateCgi(_client->getBuffer());
 		createContent("", 201, "CGI");
 		return true;
@@ -209,7 +210,7 @@ void Response::createContent(std::string path, int status_code, std::string stat
     std::string content;
 
 	std::cout << "Path: " << path << std::endl;
-    if (status_message != "autoindex" && status_message != "CGI") {
+    if (status_message != "autoindex" && status_message != "CGI" && _client->getRequestMethod() != "POST"){
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
             std::cerr << RED << "Error: Could not open file: " << RST << path << std::endl;
@@ -311,7 +312,7 @@ std::string Response::findPath(Location *location) {
 	if (location == NULL) {
 		return (_server.root.erase(_server.root.size() - 1) + _client->getRequestedUrl());
 	} else {
-		if (location->path == "/cgi") {
+		if (location->path == "/cgi-bin") {
 			return (location->cgi_pass.erase(location->cgi_pass.size() - 1) + _client->getRequestedUrl());
 		}
 		return (location->root.erase(location->root.size() - 1) + _client->getRequestedUrl());
