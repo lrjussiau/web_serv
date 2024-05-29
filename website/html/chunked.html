@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chunked Request Example</title>
+    <style>
+        body {
+            background-color: #f2f2f2;
+            color: #333;
+            font-family: Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        .container {
+            text-align: center;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin: 0 0 20px;
+        }
+        p {
+            font-size: 1.2rem;
+            margin: 20px 0;
+        }
+        button, a.button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            color: #fff;
+            background-color: #007BFF;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+	<div class="container">
+        <h1>Chunked Transfer Encoding Example</h1>
+        <p>Click the button below to send a chunked request to the server.</p>
+        <button id="sendChunkedRequest">Send Chunked Request</button>
+        <a href="index.html" class="button">Go Back to Home</a>
+    </div>
+
+    <script>
+        document.getElementById('sendChunkedRequest').addEventListener('click', async () => {
+            // Create a readable stream with chunks
+            const stream = new ReadableStream({
+                start(controller) {
+                    // Send the first chunk
+                    controller.enqueue(new TextEncoder().encode('4\r\nWiki\r\n'));
+                    // Send the second chunk
+                    controller.enqueue(new TextEncoder().encode('5\r\npedia\r\n'));
+                    // Send the third chunk
+                    controller.enqueue(new TextEncoder().encode('E\r\n in\r\n\r\nchunks.\r\n'));
+                    // Send the final chunk indicating end of stream
+                    controller.enqueue(new TextEncoder().encode('0\r\n\r\n'));
+                    // Close the stream
+                    controller.close();
+                }
+            });
+
+            // Create a request using the fetch API
+            const response = await fetch('/upload', {
+                method: 'POST',
+                headers: {
+                    'Transfer-Encoding': 'chunked',
+                    'Content-Type': 'application/octet-stream'
+                },
+                body: stream
+            });
+
+            // Check the response
+            if (response.ok) {
+                console.log('Chunked request sent successfully!');
+            } else {
+                console.error('Failed to send chunked request.');
+            }
+        });
+    </script>
+</body>
+</html>

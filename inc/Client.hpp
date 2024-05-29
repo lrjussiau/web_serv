@@ -22,7 +22,7 @@ class Client {
 		std::string	_sessionId;
 		std::string	_sessionName;
 
-		void	parsePostRequest(std::string &body);
+		void    parseChunkedBody(std::ifstream &request_file, std::string path);
 		void	parseBody(std::ifstream &request_file, std::string path);
 		void	getPathToUpload(std::string line, std::string path);
 
