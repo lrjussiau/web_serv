@@ -371,12 +371,12 @@ std::string Response::generateCgi(std::string input_string){
 
         // Prepare the arguments for execve
         char *args[] = {const_cast<char *>("python3"),
-                        const_cast<char *>("website/cgi/base64encoder.py"),
+                        const_cast<char *>("website/cgi-bin/base64encoder.py"),
                         const_cast<char *>(input_string.c_str()),
                         NULL};
 
         // Execute the Python script
-        execve("/usr/local/munki/Python.framework/Versions/3.8/bin/python3.8", args, NULL);
+        execve("python3.8", args, NULL);
         // If execve returns, it must have failed.
         perror("execve");
         exit(EXIT_FAILURE);
