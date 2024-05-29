@@ -27,7 +27,7 @@ class Supervisor {
 		struct timeval 							_timer;
 		std::map<std::string, std::string>		_sessionIds;
 		std::map<int, Server*>					_servers_map;
-		std::map<int, Client>					_clients_map;
+		std::map<int, Client*>					_clients_map;
 
 	public:
 		Supervisor(void);

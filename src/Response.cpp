@@ -22,11 +22,12 @@ Response::Response(const Response& src) {
 // 					Constructor
 // ------------------------------------------------------
 
-Response::Response(Client &client, ServerConfig server) : _client(client) , _server(server) {
+Response::Response(Client *client, ServerConfig server) : _client(client) , _server(server) {
 	std::string	path;
 	Location* 	location;
 
 	std::cout << ORG << "[Server : " << server.server_name << "] build a response" << RST << std::endl;
+	std::cout << ORG << "Client :" << _client->getSessionName() << RST << std::endl;
 	if (DEBUG_REPONSE) {
 		std::cout << GRN << "Debug Reponse Path :" << RST << std::endl;
 	}
@@ -35,8 +36,10 @@ Response::Response(Client &client, ServerConfig server) : _client(client) , _ser
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Method : " << GRN << "OK" << RST << std::endl;
 	}
-	if (isCookie())
+	if (isCookie(client)) {
+		std::cout << ORG << "Client :" << _client->getSessionName() << RST << std::endl;
 		return;
+	}
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Cookie : " << GRN << "OK" << RST << std::endl;
 	}
@@ -63,7 +66,7 @@ Response::Response(Client &client, ServerConfig server) : _client(client) , _ser
 
 
 	PathType pathType = getPathType(path);
-	if (client.getRequestMethod() == "GET") {
+	if (client->getRequestMethod() == "GET") {
 		switch (pathType) {
 			case PATH_IS_FILE:
 				if (DEBUG_REPONSE) {
@@ -94,12 +97,12 @@ Response::Response(Client &client, ServerConfig server) : _client(client) , _ser
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Mime Type : " << GRN << "OK" << RST << std::endl;
 	}
-	if (client.getRequestMethod() == "POST") {
+	if (client->getRequestMethod() == "POST") {
 		if (DEBUG_REPONSE) {
 			std::cout << "\t| " << "Path to upload : " << GRN << path << RST << std::endl;
 			std::cout << "\t| " << GRN << "Create a 201 request" << RST << std::endl;
 		}
-		client.parsePostRequest(PATH_TO_REQUESTS, path);
+		client->parsePostRequest(PATH_TO_REQUESTS, path);
 		createContent("", 201, "Created");
 		return;
 	} else {
@@ -116,7 +119,7 @@ Response::Response(Client &client, ServerConfig server) : _client(client) , _ser
 
 bool Response::checkMimeType() {
 
-	std::string mime = _client.getRequestMimetype();
+	std::string mime = _client->getRequestMimetype();
 
 	if (mime != "text/html" && mime != "text/css" 
 		&& mime != "text/javascript" && mime != "image/png" 
@@ -133,7 +136,7 @@ bool Response::checkMimeType() {
 }
 
 bool	Response::isMethodWrong() {
-	if (_client.getRequestMethod() != "GET" && _client.getRequestMethod() != "POST" && _client.getRequestMethod() != "DELETE") {
+	if (_client->getRequestMethod() != "GET" && _client->getRequestMethod() != "POST" && _client->getRequestMethod() != "DELETE") {
 		createContent(_server.root + _server.error_pages[405], 405, "Method Not Allowed");
 		return true;
 	}
@@ -160,23 +163,23 @@ std::string replacePlaceholder(const std::string &html, const std::string &place
     return result;
 }
 
-bool	Response::isCookie() {
-	std::cout << "mur " << _client.getRequestedUrl() << std::endl;
-	if (_client.getRequestedUrl() == "/cookie.html" || _client.getRequestedUrl() == "/cookie" ){
+bool	Response::isCookie(Client *client) {
+	std::cout << "mur " << client->getRequestedUrl() << std::endl;
+	if (client->getRequestedUrl() == "/cookie.html" || client->getRequestedUrl() == "/cookie" ){
 		try {
 			std::string html = readFile("./website/html/cookie.html");
-			if (_client.getRequestMethod() == "GET"){
+			if (client->getRequestMethod() == "GET"){
 				std::cout << "I am in the get for cookie" <<std::endl;
-				std::string name  = _client.getSessionName();
-				std::cout << "client sesh name : " << _client.getSessionName() << std::endl;
+				std::string name  = client->getSessionName();
+				std::cout << "client sesh name : " << client->getSessionName() << std::endl;
 				this->_content = replacePlaceholder(html, "{{message}}", name);
 				createContent("", 200, "COOKIE");
 			}
 			else{
 				std::cout << "I am in the post for cookie" <<std::endl;
-				_client.setSessionName(_client.getBuffer());
-				std::cout << "client session: " << _client.getSessionName() << std::endl;
-				this->_content = replacePlaceholder(html, "{{message}}",  _client.getSessionName());
+				client->setSessionName(_client->getBuffer());
+				std::cout << "client session: " << client->getSessionName() << std::endl;
+				this->_content = replacePlaceholder(html, "{{message}}",  client->getSessionName());
 				createContent("", 201, "COOKIE");
 			}
 			} catch (const std::exception &e) {
@@ -188,8 +191,8 @@ bool	Response::isCookie() {
 }
 
 bool	Response::isCGI() {
-	if (_client.getRequestMethod() == "POST" && _client.getRequestedUrl() == "/cgi") {
-		this->_content = generateCgi(_client.getBuffer());
+	if (_client->getRequestMethod() == "POST" && _client->getRequestedUrl() == "/cgi") {
+		this->_content = generateCgi(_client->getBuffer());
 		createContent("", 201, "CGI");
 		return true;
 	}
@@ -231,12 +234,7 @@ void Response::createContent(std::string path, int status_code, std::string stat
     std::ostringstream content_stream;
     std::string content;
 
-	if (status_message == "COOKIE"){
-		createStatusLine(status_code, status_message);
-    	init_headers();
-		return;
-	}
-    if (status_message != "autoindex" && status_message != "CGI" && _client.getRequestMethod() != "POST") {
+    if (status_message != "autoindex" && status_message != "CGI" && status_message != "COOKIE" && _client->getRequestMethod() != "POST" ) {
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
             std::cerr << RED << "Error: Could not open file: " << RST << path << std::endl;
@@ -266,9 +264,9 @@ void Response::createStatusLine(int status_code, std::string status_message) {
 void Response::init_headers(void) {
 	this->_headers["Date: "] = getTime();
 	this->_headers["Content-Length: "] = std::to_string(this->_content.length());
-	this->_headers["Content-Type: "] = this->_client.getRequestMimetype();
-	this->_headers["Connection: "] = this->_client.getRequestConnection();
-	this->_headers["Set-cookie: "] = "sessionId=" + this->_client.getSessionId() + "; HttpOnly";
+	this->_headers["Content-Type: "] = _client->getRequestMimetype();
+	this->_headers["Connection: "] = _client->getRequestConnection();
+	this->_headers["Set-cookie: "] = "sessionId=" + _client->getSessionId() + "; HttpOnly";
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| " << "Create header : " << GRN << "OK" << RST << std::endl;
 	}
@@ -313,7 +311,7 @@ std::string	Response::getFinalReply(void) const{
 
 Location* Response::findLocation() { 
 	for (std::map<std::string, Location>::iterator it = _server.locations.begin(); it != _server.locations.end(); ++it) {
-		size_t pos = _client.getRequestedUrl().find(it->first);
+		size_t pos = _client->getRequestedUrl().find(it->first);
 
 		if (pos != std::string::npos) {
 			if (!it->second.redirect.empty()){
@@ -321,7 +319,7 @@ Location* Response::findLocation() {
 				buildRedirectResponse(it->second.redirect);
 				return (NULL);
 			}
-			if (_client.getRequestedUrl()[it->first.size()] != '.')
+			if (_client->getRequestedUrl()[it->first.size()] != '.')
 				return &(it->second);
 		}
 	}
@@ -330,12 +328,12 @@ Location* Response::findLocation() {
 
 std::string Response::findPath(Location *location) {
 	if (location == NULL) {
-		return (_server.root.erase(_server.root.size() - 1) + _client.getRequestedUrl());
+		return (_server.root.erase(_server.root.size() - 1) + _client->getRequestedUrl());
 	} else {
 		if (location->path == "/cgi") {
-			return (location->cgi_pass.erase(location->cgi_pass.size() - 1) + _client.getRequestedUrl());
+			return (location->cgi_pass.erase(location->cgi_pass.size() - 1) + _client->getRequestedUrl());
 		}
-		return (location->root.erase(location->root.size() - 1) + _client.getRequestedUrl());
+		return (location->root.erase(location->root.size() - 1) + _client->getRequestedUrl());
 	}
 }
 

@@ -127,10 +127,10 @@ void Client::parseCgiPostRequest(std::string &body){
 
 void Client::parsePostRequest(std::string path_to_request, std::string path) {
     std::string line;
-    bool inBody = false;
+    // bool inBody = false;
     bool inBound = false;
     bool findBoundary = false;
-    std::ofstream file;
+
 
     std::ifstream request_file(path_to_request.c_str());
     if (!request_file.is_open()) {
@@ -147,34 +147,44 @@ void Client::parsePostRequest(std::string path_to_request, std::string path) {
             findBoundary = true;
         }
         if (inBound) {
-            if (line.find("Content-Disposition:") != std::string::npos) {
-				getPathToUpload(line, path);
-                if (!_postName.empty())
-                    break;
-				file.open(_postName.c_str(), std::ios::binary);
-            }
-            if (line == "\r") {
-                inBody = true;
-                continue;
-            }
-            if (inBody) {
-				std::cout << "line: " << line << std::endl;
-                std::string boundary = _boundary;
-                if (line.find(boundary.erase(_boundary.size() - 1)) != std::string::npos) {
-                    inBody = false;
-                    file.close();
-                    break;
-                } else {
-                    file.write(line.c_str(), line.size());
-                    file.write("\n", 1);
-                }
-            }
+			parseBody(request_file, path);
+			break;
         }
     }
-    if (file.is_open()) {
+    request_file.close();
+}
+
+void Client::parseBody(std::ifstream &request_file, std::string path) {
+	std::string line;
+	bool inBody = false;
+	std::ofstream file;
+
+	while (std::getline(request_file, line)) {
+		if (line.find("Content-Disposition:") != std::string::npos) {
+			getPathToUpload(line, path);
+		if (_postName.empty())
+			break;
+			file.open(_postName.c_str(), std::ios::binary);
+		}
+		if (line == "\r") {
+			inBody = true;
+			continue;
+		}
+		if (inBody) {
+			std::string boundary = _boundary;
+			if (line.find(boundary.erase(_boundary.size() - 1)) != std::string::npos) {
+				inBody = false;
+				file.close();
+				break;
+			} else {
+				file.write(line.c_str(), line.size());
+				file.write("\n", 1);
+			}
+		}
+	}
+	if (file.is_open()) {
         file.close();
     }
-    request_file.close();
 }
 
 void Client::getPathToUpload(std::string line, std::string path) {

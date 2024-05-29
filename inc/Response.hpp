@@ -13,7 +13,7 @@ class Response {
 		std::map<std::string, std::string>	_headers;
 		std::string							_content;
 		std::string							_final_reply;
-		Client								_client;
+		Client*								_client;
 		ServerConfig						_server;
 
 		void 		buildResponse(void);
@@ -27,7 +27,7 @@ class Response {
 		std::string generateCgi(std::string input_string);
 
 		bool		isMethodWrong();
-		bool		isCookie();
+		bool		isCookie(Client *client);
 		bool		isCGI();
 		bool		checkMimeType();
 		Location*	findLocation();
@@ -35,7 +35,7 @@ class Response {
 
 	public:
 		Response(void);
-		Response(Client &client, ServerConfig server);
+		Response(Client *client, ServerConfig server);
 		~Response(void);
 		Response(const Response& src);
 

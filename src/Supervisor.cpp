@@ -5,7 +5,7 @@ Supervisor::~Supervisor(void){
 	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
 		close(it->first);
 	}
-	for (std::map<int, Client>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
+	for (std::map<int, Client*>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
 		close(it->first);
 	}
 	return;
@@ -99,8 +99,8 @@ void	Supervisor::closeServer(int server_socket){
 /*				client deletion				*/
 
 void	Supervisor::removeClientsFromServer(int server_socket){
-	for (std::map<int, Client>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
-		if (it->second.getServerSocket() == server_socket){
+	for (std::map<int, Client*>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
+		if (it->second->getServerSocket() == server_socket){
 			fdSetRemove(it->first);
 			close(it->first);
 			this->_clients_map.erase(it);
@@ -109,7 +109,7 @@ void	Supervisor::removeClientsFromServer(int server_socket){
 }
 
 void	Supervisor::closeClient(int client_socket){
-	std::map<int, Client>::iterator it = this->_clients_map.find(client_socket);
+	std::map<int, Client*>::iterator it = this->_clients_map.find(client_socket);
 
 	close(client_socket);
     FD_CLR(client_socket, &this->_all_sockets);
@@ -166,7 +166,7 @@ void Supervisor::acceptNewConnection(int server_socket){
     client_socket = accept(server_socket, NULL, NULL);
 	/*set new session id to this client attribute  + set info in map<std::string cookie, std::string attrinbutes>*/
 	setNonBlocking(client_socket, 0);
-	Client	new_client(server_socket, client_socket, cookie);
+	Client	*new_client = new Client(server_socket, client_socket, cookie);
     if (client_socket == -1) {
         std::cout << RED << "[Server " << server_socket << "] Accept error" << RST << std::endl;
         return ;
@@ -218,7 +218,7 @@ void Supervisor::readRequestFromClient(int client_socket) {
         memset(&buffer, '\0', sizeof buffer);
     }
 	request_file.close();
-	this->_clients_map[client_socket].setData(PATH_TO_REQUESTS);
+	this->_clients_map[client_socket]->setData(PATH_TO_REQUESTS);
 	FD_SET(client_socket, &(this->_write_fds));
 	FD_CLR(client_socket, &(this->_read_fds));
 
@@ -228,8 +228,8 @@ void Supervisor::readRequestFromClient(int client_socket) {
 /*add set-cookie header with attributes from client*/
 //->connection reset by peer -> client socket = -1
 void	Supervisor::writeResponseToClient(int client_socket){
-	Client client = this->_clients_map[client_socket];
-	Server *server = this->_servers_map[client.getServerSocket()];
+	Client *client = this->_clients_map[client_socket];
+	Server *server = this->_servers_map[client->getServerSocket()];
 	ServerConfig conf = server->getServerConfig();
 	Response response(client, server->getServerConfig());
 
@@ -237,11 +237,10 @@ void	Supervisor::writeResponseToClient(int client_socket){
 	FD_CLR(client_socket, &(this->_write_fds));
 	//FD_CLR(client_socket, &(this->_all_sockets));
 	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1){
-		std::cout << RED << "[Server "<< client.getServerSocket() << "] Send error to client fd: " << client.getSocket() << RST << std::endl;
+		std::cout << RED << "[Server "<< client->getServerSocket() << "] Send error to client fd: " << client->getSocket() << RST << std::endl;
 	}
 	else
 		std::cout << ORG << "successfully sent response" << RST <<  std::endl; 
 	unlink(PATH_TO_REQUESTS);
 	return;
 }
-
