@@ -24,7 +24,7 @@ class Response {
 
 		void		handleDirectory(std::string path, Location *location);
 		void		generateAutoIndex(std::string dir_requested);
-		std::string generateCgi(std::string input_string);
+		std::string generateCgi(std::string script, std::string input_string);
 
 		bool		isMethodWrong();
 		bool		isCookie(Client *client);

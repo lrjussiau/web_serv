@@ -158,9 +158,17 @@ bool	Response::isCookie(Client *client) {
 
 bool	Response::isCGI() {
 	if (_client->getRequestMethod() == "POST" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
-		this->_content = generateCgi(_client->getBuffer());
+		this->_content = generateCgi(_client->getRequestedUrl(), "");
 		createContent("", 201, "CGI");
 		return true;
+	}
+	if (_client->getRequestMethod() == "GET" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
+		std::cout << "helo" << std::endl;
+		this->_content = generateCgi(_client->getRequestedUrl(), "");
+		std::cout << "helo" << std::endl;
+		createContent("", 200, "CGI");
+		return true;
+
 	}
 	return false;
 }
@@ -342,11 +350,10 @@ void	Response::buildRedirectResponse(std::string redirect_path){
 	return;
 }
 
-std::string Response::generateCgi(std::string input_string){
-    std::string cgi_page;
-    std::string encoded_string;
+std::string	executeScript(char **args, const char *interpreter){
+	std::string	script_output;
 
-    int pipefd[2];
+	int pipefd[2];
     if (pipe(pipefd) == -1) {
         perror("pipe");
         exit(EXIT_FAILURE);
@@ -359,18 +366,11 @@ std::string Response::generateCgi(std::string input_string){
     if (pid == 0) { // Child process
         close(pipefd[0]); // Close unused read end
 
-        // Redirect stdout to the write end of the pipe
         dup2(pipefd[1], STDOUT_FILENO);
         close(pipefd[1]); // Close the write end of the pipe
 
-        // Prepare the arguments for execve
-        char *args[] = {const_cast<char *>("python3"),
-                        const_cast<char *>("website/cgi-bin/base64encoder.py"),
-                        const_cast<char *>(input_string.c_str()),
-                        NULL};
-
         // Execute the Python script
-        execve("python3.8", args, NULL);
+        execve(interpreter, args, NULL);
         // If execve returns, it must have failed.
         perror("execve");
         exit(EXIT_FAILURE);
@@ -380,7 +380,7 @@ std::string Response::generateCgi(std::string input_string){
         ssize_t count;
         while ((count = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
-            encoded_string += buffer;
+            script_output += buffer;
         }
         close(pipefd[0]); // Close read end
 
@@ -388,15 +388,41 @@ std::string Response::generateCgi(std::string input_string){
         int status;
         waitpid(pid, &status, 0);
     }
-	/*if (!encoded_string.empty() && encoded_string.back() == '\n') {
-            encoded_string.erase(encoded_string.size() - 1);
-    }*/
-	std::cout << "encoded string " << encoded_string << std::endl;
-    //cgi_page += "<!DOCTYPE html>\n<html>\n<h1>Here is your encoded string</h1>\n<body>\n";
-    //cgi_page += "<h3>" + encoded_string + "</h3>\n";
-    //cgi_page += "</body>\n</html>\n";
+	std::cout << "script output" << script_output << std::endl;
+    return script_output;
+}
 
-    return encoded_string;
+std::string Response::generateCgi(std::string script, std::string input_string){
+	size_t 		pos = script.find('.');
+	std::string	interpreter;
+	std::string	script_extension = script.substr(pos + 1, script.length());
+	char 		*args[4];
+
+	std::cout << "In generateCgi" << script_extension << std::endl;
+	if (script_extension == "py"){
+		args[0] = const_cast<char *>("python3");
+		interpreter = "/usr/bin/python3";
+	}
+	else if (script_extension == "php?"){
+		args[0] = const_cast<char *>("php");
+		script.pop_back();
+		interpreter = "/usr/bin/php";
+	}
+	else{
+		script.pop_back();
+		args[0] = const_cast<char *>("bash");
+		interpreter = "/bin/bash";
+	}
+	std::cout << "interpreter used" << interpreter << std::endl;
+	std::string	script_path = "./website" + script;
+    args[1] = const_cast<char *>(script_path.c_str());
+	if (input_string.length() != 0){
+		args[2] = const_cast<char *>(input_string.c_str());
+		args[3] = NULL;
+	}
+	else
+		args[2] = NULL;
+    return executeScript(args, interpreter.c_str());
 }
 
 // ------------------------------------------------------

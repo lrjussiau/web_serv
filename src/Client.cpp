@@ -88,10 +88,10 @@ void Client::setData(std::string filePath) {
             }
         }
         //cgi
-        if (this->_requestedUrl == "/cgi-bin" && line.find("input") != std::string::npos) {
+        /*if (this->_requestedUrl == "/cgi-bin/base64encoder.py" && line.find("input") != std::string::npos) {
             this->_buffer = line.substr(6, line.length() - 6);
             break;
-        }
+        }*/
         //cookie
         if (this->_requestedUrl == "/cookie" && line.find("userName") != std::string::npos){
             this->_buffer = line.substr(9, line.length() - 9);
@@ -112,16 +112,14 @@ void Client::setData(std::string filePath) {
     file.close();
 }
 
-void Client::parseCgiPostRequest(std::string &body){
+/*void Client::parseCgiPostRequest(std::string &body){
     std::string line;
     std::istringstream buffer_stream(body);
-
-    std::cout << "here is the body for cgi " << std::endl;
     while (std::getline(buffer_stream, line)){
         std::cout << line << std::endl;
     }
     return;
-}
+}*/
 
 
 void Client::parsePostRequest(std::string path_to_request, std::string path) {
