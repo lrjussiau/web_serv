@@ -42,9 +42,6 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Cookie : " << GRN << "OK" << RST << std::endl;
 	}
-	// 	if () {																			// Look For Content-Length
-	//  createContent(server.root + server.error_pages[413], 413, "Request Entity Too Large");
-
 	// Implement redirect
 	if (isCGI())
 		return;
@@ -62,8 +59,6 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Path : " << GRN << path << RST << std::endl;
 	}
-
-
 	PathType pathType = getPathType(path);
 	if (client->getRequestMethod() == "GET") {
 		switch (pathType) {
@@ -125,7 +120,6 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 // ------------------------------------------------------
 
 bool Response::checkMimeType() {
-
 	std::string mime = _client->getRequestMimetype();
 
 	if (mime[mime.size() - 1] == '\r')
@@ -138,7 +132,7 @@ bool Response::checkMimeType() {
 		&& mime != "application/json" && mime != "application/javascript" 
 		&& mime != "application/x-javascript" && mime != "application/x-www-form-urlencoded"
 		&& mime != "multipart/form-data" && mime != "text/plain") {
-		createContent(_server.root + _server.error_pages[415], 415, "Unsupported Media Type");
+		createContent(_server.root + "/" + _server.error_pages[415], 415, "Unsupported Media Type");
 		return true;
 	}
 	return false;
@@ -146,7 +140,7 @@ bool Response::checkMimeType() {
 
 bool	Response::isMethodWrong() {
 	if (_client->getRequestMethod() != "GET" && _client->getRequestMethod() != "POST" && _client->getRequestMethod() != "DELETE") {
-		createContent(_server.root + _server.error_pages[405], 405, "Method Not Allowed");
+		createContent(_server.root + "/" + _server.error_pages[405], 405, "Method Not Allowed");
 		return true;
 	}
 	return false;
@@ -172,7 +166,12 @@ bool	Response::isCGI() {
 }
 
 void	Response::handleDirectory(std::string path, Location *location) {
-	if (location->autoindex) {
+	if (location == NULL) {
+		if (DEBUG_REPONSE) {
+			std::cout << "\t| " << GRN << "\t is a directory: No location found, 403" << RST << std::endl;
+		}
+		createContent(_server.root + "/" + _server.error_pages[403], 403, "Forbidden");
+	} else if (location->autoindex == true) {
 		if (DEBUG_REPONSE) {
 			std::cout << "\t| " << GRN << "\t Is a directory: Auto index activate" << RST << std::endl;
 		}
@@ -192,7 +191,7 @@ void	Response::handleDirectory(std::string path, Location *location) {
 		if (DEBUG_REPONSE) {
 			std::cout << "\t| " << GRN << "\t is a directory: Auto index desactivate, 403" << RST << std::endl;
 		}
-		createContent(_server.root + _server.error_pages[403], 403, "Forbidden");
+		createContent(_server.root + "/" + _server.error_pages[403], 403, "Forbidden");
 	}
 	return;
 }
@@ -235,7 +234,14 @@ void Response::createContent(std::string path, int status_code, std::string stat
 		if (DEBUG_REPONSE) {
 			std::cout << "\t| " << "Create content : " << GRN << "OK" << RST << std::endl;
 		}
-    }
+	}
+	if (content.size() > _server.client_max_body_size) {
+		if (DEBUG_REPONSE) {
+			std::cout << "\t| " << "Content too large : " << content.size() << GRN << " Redirect 413" << RST << std::endl;
+		}
+		createContent(_server.root + "/" + _server.error_pages[413], 413, "Request Entity Too Large");
+		return;
+	}
 	createStatusLine(status_code, status_message);
     init_headers();
 }
@@ -285,7 +291,7 @@ void 		Response::buildResponse(void){
 		for (std::map<std::string, std::string>::iterator it = this->_headers.begin(); it != this->_headers.end(); ++it) {
 			std::cout << it->first << it->second << std::endl;
 		}
-		// std::cout << CYA << this->_content << RST << std::endl;
+		std::cout << CYA << this->_content << RST << std::endl;
 	}
 }
 

@@ -38,8 +38,8 @@ style = """<style>
 cgitb.enable()  # Enable CGI error reporting
 
 form = cgi.FieldStorage()
-input_string = form.getvalue("input_string")
-print(f"value: {input_string}")
+test = form.getvalue("input_string")
+print(f"value: {test}")
 if input_string:
     encoded_string = base64.b64encode(input_string.encode()).decode()
     print(f"""

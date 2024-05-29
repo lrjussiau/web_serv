@@ -46,6 +46,7 @@
 #include <unistd.h>
 #include <sys/stat.h>
 #include <netdb.h>
+#include <signal.h>
 
 // #include "Config.hpp"
 // #include "Utils.hpp"

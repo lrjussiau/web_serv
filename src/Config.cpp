@@ -34,9 +34,9 @@ void trimSemicolon(std::string& str) {
     }
 }
 
-int Config::parseSize(const std::string &size_str) {
+size_t Config::parseSize(const std::string &size_str) {
     std::string numStr;
-	int 		num = 0;
+	size_t 		num = 0;
 
     for (size_t i = 0; i < size_str.size(); ++i) {
         if (std::isdigit(size_str[i])) {
@@ -232,7 +232,8 @@ Location Config::parseLocationBlock(std::ifstream &file, std::string path) {
 	Location location;
 
     location.path = path;
-    while (std::getline(file, line)) {
+    location.autoindex = false;
+    do {
         std::istringstream iss(line);
         std::string token;
         iss >> token;
@@ -242,6 +243,17 @@ Location Config::parseLocationBlock(std::ifstream &file, std::string path) {
             while (iss >> method) {
                 trimSemicolon(method);
                 location.allow_methods.push_back(method);
+            }
+        } else if (token == "autoindex") {
+            std::string value;
+            iss >> value;
+            trimSemicolon(value);
+            if (value == "on") {
+                location.autoindex = true;
+            } else if (value == "off") {
+                location.autoindex = false;
+            } else {
+                throw Except("Invalid autoindex value: " + value);
             }
         } else if (token == "root") {
             iss >> location.root;
@@ -258,17 +270,13 @@ Location Config::parseLocationBlock(std::ifstream &file, std::string path) {
                 trimSemicolon(extension);
                 location.cgi_extensions.push_back(extension);
             }
-        } else if (token == "autoindex") {
-            std::string value;
-            iss >> value;
-            location.autoindex = (value == "on;");
         } else if (token == "return") {
             iss >> location.redirect;
             trimSemicolon(location.redirect);
         } else if (token == "}") {
             return location;
         }
-    }
+    } while (std::getline(file, line));
 	return location;
 }
 
@@ -375,47 +383,6 @@ bool isValidIPv6Group(const std::string& group) {
     return true;
 }
 
-// bool Config::isValidIPv6(const std::string& address) {
-//     std::vector<std::string> groups;
-//     std::string currentGroup;
-//     bool doubleColonFound = false;
-//     std::size_t groupCount = 0;
-
-//     for (std::size_t i = 0; i < address.length(); ++i) {
-//         if (address[i] == ':') {
-//             if (i > 0 && address[i-1] == ':') {
-//                 if (doubleColonFound) {
-//                     return false;  // More than one "::" found
-//                 }
-//                 doubleColonFound = true;
-//                 currentGroup.clear();
-//             } else {
-//                 if (!currentGroup.empty()) {
-//                     if (!isValidIPv6Group(currentGroup)) {
-//                         return false;
-//                     }
-//                     groups.push_back(currentGroup);
-//                     currentGroup.clear();
-//                     ++groupCount;
-//                 }
-//             }
-//         } else {
-//             currentGroup += address[i];
-//         }
-//     }
-//     if (!currentGroup.empty()) {
-//         if (!isValidIPv6Group(currentGroup)) {
-//             return false;
-//         }
-//         groups.push_back(currentGroup);
-//         ++groupCount;
-//     }
-//     if (groupCount > 8 || (groupCount < 8 && !doubleColonFound)) {
-//         return false;
-//     }
-//     return true;
-// }
-
 // ------------------------------------------------------
 // 					 Check Config
 // ------------------------------------------------------
@@ -455,21 +422,15 @@ void Config::checkConfig() const {
         if (server.client_max_body_size == 0) {
             throw Except("Server block missing client_max_body_size directive");
         }
-        // for (std::map<std::string, Location>::const_iterator loc_it = server.locations.begin(); loc_it != server.locations.end(); ++loc_it) {
-        //     const Location& loc = loc_it->second;
-        //     if (loc.allow_methods.empty()) {
-        //         throw Except("Location block missing allow_methods directive");
-        //     }
-        //     if (loc.root.empty()) {
-        //         throw Except("Location block missing root directive");
-        //     }
-        //     if (loc.upload_store.empty()) {
-        //         throw Except("Location block missing upload_store directive");
-        //     }
-        //     if (loc.cgi_pass.empty()) {
-        //         throw Except("Location block missing cgi_pass directive");
-        //     }
-        // }
+        for (std::map<std::string, Location>::const_iterator loc_it = server.locations.begin(); loc_it != server.locations.end(); ++loc_it) {
+            const Location& loc = loc_it->second;
+            if (loc.allow_methods.empty()) {
+                throw Except("Location block missing allow_methods directive");
+            }
+            if (loc.root.empty()) {
+                throw Except("Location block missing root directive");
+            }
+        }
     }
 }
 

@@ -3,10 +3,13 @@
 #include "../inc/Utils.hpp"
 #include "../inc/Supervisor.hpp"
 
-
+void handle_sigpipe(int sig) {
+    std::cerr << "Caught SIGPIPE: " << sig << std::endl;
+}
 
 int main(int argc, char **argv) {
 
+    signal(SIGPIPE, handle_sigpipe);
 	try {
 		if (argc != 2)
         	throw Except("Please provide a config file. ./web_serv \"file\"");

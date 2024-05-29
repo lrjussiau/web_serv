@@ -18,6 +18,7 @@
         }
         .container {
             text-align: center;
+            width: 80%;
         }
         h1 {
             font-size: 3rem;
@@ -47,7 +48,7 @@
         }
         ul {
             list-style-type: none;
-            padding: 0;
+            padding: 0px;
         }
         li {
             margin: 10px 0;
@@ -65,11 +66,7 @@
         <a href="index.html">Go Back to Home</a>
         <h2>Uploaded Files</h2>
         <ul id="file-list">
-            <!-- File list will be injected here by the CGI script -->
-            <!-- CGI script will generate list items here -->
-            <!-- Include a reference to the CGI script that will list the files -->
-            <!-- <iframe src="/cgi-bin/list_files.py" style="border:none;width:100%;height:auto;"></iframe> -->
-            <iframe id="fileListFrame" src="/upload/" style="width:100%; height:300px;"></iframe>
+            <iframe id="fileListFrame" src="upload" style="width:800px; height:300px;"></iframe>
             <form id="deleteForm">
                 <input type="text" id="fileName" name="fileName" placeholder="Nom du fichier à supprimer">
                 <button type="button" onclick="deleteFile()">Supprimer le fichier</button>

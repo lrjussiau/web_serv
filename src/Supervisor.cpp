@@ -225,22 +225,90 @@ void Supervisor::readRequestFromClient(int client_socket) {
 	return;
 }
 
+// void Supervisor::readRequestFromClient(int client_socket) {
+//     char buffer[100000];
+//     int bytes_read;
+//     std::ofstream request_file;
+//     std::string request_file_path = PATH_TO_REQUESTS;
+    
+//     request_file.open(request_file_path.c_str(), std::ios::out | std::ios::app | std::ios::binary);
+//     if (!request_file.is_open()) {
+//         std::cerr << "Failed to open request file" << std::endl;
+//         closeClient(client_socket);
+//         return;
+//     }
+
+//     memset(&buffer, '\0', sizeof buffer);
+//     std::cout << "client socket " << client_socket << std::endl;
+
+//     while ((bytes_read = recv(client_socket, &buffer, sizeof(buffer) - 1, 0)) > 0) {
+//         request_file.write(buffer, bytes_read);
+//         if (!request_file) {
+//             std::cerr << "Failed to write to request file" << std::endl;
+//             closeClient(client_socket);
+//             return;
+//         }
+//         memset(&buffer, '\0', sizeof buffer);
+//     }
+
+//     if (bytes_read == -1 && errno != EAGAIN && errno != EWOULDBLOCK) {
+//         std::cerr << "recv error: " << strerror(errno) << std::endl;
+//         closeClient(client_socket);
+//     } else if (bytes_read == 0) {
+//         std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
+//         closeClient(client_socket);
+//     }
+
+//     request_file.close();
+//     this->_clients_map[client_socket]->setData(PATH_TO_REQUESTS);
+//     FD_SET(client_socket, &(this->_write_fds));
+//     FD_CLR(client_socket, &(this->_read_fds));
+
+//     return;
+// }
+
+
 /*add set-cookie header with attributes from client*/
 //->connection reset by peer -> client socket = -1
-void	Supervisor::writeResponseToClient(int client_socket){
-	Client *client = this->_clients_map[client_socket];
-	Server *server = this->_servers_map[client->getServerSocket()];
-	ServerConfig conf = server->getServerConfig();
-	Response response(client, server->getServerConfig());
 
-	FD_SET(client_socket, &(this->_read_fds));
-	FD_CLR(client_socket, &(this->_write_fds));
-	//FD_CLR(client_socket, &(this->_all_sockets));
-	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1){
-		std::cout << RED << "[Server "<< client->getServerSocket() << "] Send error to client fd: " << client->getSocket() << RST << std::endl;
-	}
-	else
-		std::cout << ORG << "successfully sent response" << RST <<  std::endl; 
-	unlink(PATH_TO_REQUESTS);
-	return;
+// void	Supervisor::writeResponseToClient(int client_socket){
+// 	Client *client = this->_clients_map[client_socket];
+// 	Server *server = this->_servers_map[client->getServerSocket()];
+// 	ServerConfig conf = server->getServerConfig();
+// 	Response response(client, server->getServerConfig());
+
+// 	FD_SET(client_socket, &(this->_read_fds));
+// 	FD_CLR(client_socket, &(this->_write_fds));
+// 	//FD_CLR(client_socket, &(this->_all_sockets));
+// 	if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1){
+// 		std::cout << RED << "[Server "<< client->getServerSocket() << "] Send error to client fd: " << client->getSocket() << RST << std::endl;
+// 	}
+// 	else
+// 		std::cout << ORG << "successfully sent response" << RST <<  std::endl; 
+// 	unlink(PATH_TO_REQUESTS);
+// 	return;
+// }
+
+
+void Supervisor::writeResponseToClient(int client_socket) {
+    Client *client = this->_clients_map[client_socket];
+    Server *server = this->_servers_map[client->getServerSocket()];
+    ServerConfig conf = server->getServerConfig();
+    Response response(client, server->getServerConfig());
+
+    FD_SET(client_socket, &(this->_read_fds));
+    FD_CLR(client_socket, &(this->_write_fds));
+    //FD_CLR(client_socket, &(this->_all_sockets));
+    if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1) {
+        if (errno == EPIPE) {
+            std::cout << RED << "[Server "<< client->getServerSocket() << "] Send error to client fd: " << client->getSocket() << " (EPIPE)" << RST << std::endl;
+        } else {
+            std::cout << RED << "[Server "<< client->getServerSocket() << "] Send error to client fd: " << client->getSocket() << " (" << strerror(errno) << ")" << RST << std::endl;
+        }
+        closeClient(client_socket); // Ensure the client is closed cleanly
+    } else {
+        std::cout << ORG << "successfully sent response" << RST << std::endl; 
+    }
+    unlink(PATH_TO_REQUESTS);
+    return;
 }
