@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Run CGI Script</title>
+    <title>Run Encoder Script</title>
     <style>
         body {
             background-color: #f2f2f2;
@@ -48,9 +48,9 @@
 </head>
 <body>
     <h2>Base64 Encoder</h2>
-    <form action="../cgi-bin/base64encoder.py" method="post">
+    <form action="../cgi-bin/base64encoder.py" method="POST">
         <label for="input_string">Enter string:</label><br>
-        <input type="text" id="input_string" name="input_string" required><br>
+        <input type="text" name="input" required><br>
         <input type="submit" value="Encode">
     </form>
 </body>

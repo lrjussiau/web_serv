@@ -1,15 +1,4 @@
-"""import sys
-import base64
-
-if len(sys.argv) != 2:
-    print("Usage: python encode_base64.py <string>")
-    sys.exit(1)
-
-input_string = sys.argv[1]
-encoded_string = base64.b64encode(input_string.encode()).decode()
-print(encoded_string)"""
-
-#!/usr/bin/env python3
+#!/usr/bin/python3
 
 import cgi
 import cgitb
@@ -35,10 +24,12 @@ style = """<style>
         }
     </style>"""
 
-cgitb.enable()  # Enable CGI error reporting
+#cgitb.enable()
 
 form = cgi.FieldStorage()
 input_string = form.getvalue("input_string")
+for field in form.keys():
+    print("<li>{}: {}</li>".format(field, form[field].value))
 print(f"value: {input_string}")
 if input_string:
     encoded_string = base64.b64encode(input_string.encode()).decode()

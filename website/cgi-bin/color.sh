@@ -1,0 +1,32 @@
+#!/bin/bash
+
+random_color=$(printf "#%02X%02X%02X" $((RANDOM % 256)) $((RANDOM % 256)) $((RANDOM % 256)))
+
+# Create an HTML file with the random background color
+echo "<!DOCTYPE html>"
+echo "<html lang=\"en\">"
+echo "<head>"
+echo "    <meta charset=\"UTF-8\">"
+echo "    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">"
+echo "    <title>Random Background Color</title>"
+echo "    <style>"
+echo "        body {"
+echo "            background-color: $random_color;"
+echo "            display: flex;"
+echo "            justify-content: center;"
+echo "            align-items: center;"
+echo "            height: 100vh;"
+echo "            margin: 0;"
+echo "            font-family: Arial, sans-serif;"
+echo "            color: #FFFFFF;"
+echo "        }"
+echo "        h1 {"
+echo "            text-shadow: 1px 1px 2px #000000;"
+echo "        }"
+echo "    </style>"
+echo "</head>"
+echo "<body>"
+echo "    <h1>Background Color: $random_color</h1>"
+echo "    <button onclick=\"location.href='index.html'\">Go Back to Home</button>"
+echo "</body>"
+echo "</html>"
