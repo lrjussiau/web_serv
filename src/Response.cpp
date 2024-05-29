@@ -22,7 +22,7 @@ Response::Response(const Response& src) {
 // 					Constructor
 // ------------------------------------------------------
 
-Response::Response(Client client, ServerConfig server) : _client(client) , _server(server) {
+Response::Response(Client &client, ServerConfig server) : _client(client) , _server(server) {
 	std::string	path;
 	Location* 	location;
 
@@ -34,6 +34,11 @@ Response::Response(Client client, ServerConfig server) : _client(client) , _serv
 		return;
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Method : " << GRN << "OK" << RST << std::endl;
+	}
+	if (isCookie())
+		return;
+	if (DEBUG_REPONSE) {
+		std::cout << "\t| Check Cookie : " << GRN << "OK" << RST << std::endl;
 	}
 	// 	if () {																			// Look For Content-Length
 	//  createContent(server.root + server.error_pages[413], 413, "Request Entity Too Large");
@@ -135,6 +140,53 @@ bool	Response::isMethodWrong() {
 	return false;
 }
 
+//close?file
+std::string readFile(const std::string &path) {
+    std::ifstream file(path);
+	file.open(path);
+    if (!file.is_open()) {
+        throw std::runtime_error("Could not open file");
+    }
+    return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+}
+
+std::string replacePlaceholder(const std::string &html, const std::string &placeholder, const std::string &value) {
+    std::string result = html;
+    size_t pos = result.find(placeholder);
+    while (pos != std::string::npos) {
+        result.replace(pos, placeholder.length(), value);
+        pos = result.find(placeholder, pos + value.length());
+    }
+    return result;
+}
+
+bool	Response::isCookie() {
+	std::cout << "mur " << _client.getRequestedUrl() << std::endl;
+	if (_client.getRequestedUrl() == "/cookie.html" || _client.getRequestedUrl() == "/cookie" ){
+		try {
+			std::string html = readFile("./website/html/cookie.html");
+			if (_client.getRequestMethod() == "GET"){
+				std::cout << "I am in the get for cookie" <<std::endl;
+				std::string name  = _client.getSessionName();
+				std::cout << "client sesh name : " << _client.getSessionName() << std::endl;
+				this->_content = replacePlaceholder(html, "{{message}}", name);
+				createContent("", 200, "COOKIE");
+			}
+			else{
+				std::cout << "I am in the post for cookie" <<std::endl;
+				_client.setSessionName(_client.getBuffer());
+				std::cout << "client session: " << _client.getSessionName() << std::endl;
+				this->_content = replacePlaceholder(html, "{{message}}",  _client.getSessionName());
+				createContent("", 201, "COOKIE");
+			}
+			} catch (const std::exception &e) {
+				std::cout << "Error 500" << e.what() <<std::endl;
+		}
+		return true;
+	}
+	return false;
+}
+
 bool	Response::isCGI() {
 	if (_client.getRequestMethod() == "POST" && _client.getRequestedUrl() == "/cgi") {
 		this->_content = generateCgi(_client.getBuffer());
@@ -179,6 +231,11 @@ void Response::createContent(std::string path, int status_code, std::string stat
     std::ostringstream content_stream;
     std::string content;
 
+	if (status_message == "COOKIE"){
+		createStatusLine(status_code, status_message);
+    	init_headers();
+		return;
+	}
     if (status_message != "autoindex" && status_message != "CGI" && _client.getRequestMethod() != "POST") {
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
@@ -211,6 +268,7 @@ void Response::init_headers(void) {
 	this->_headers["Content-Length: "] = std::to_string(this->_content.length());
 	this->_headers["Content-Type: "] = this->_client.getRequestMimetype();
 	this->_headers["Connection: "] = this->_client.getRequestConnection();
+	this->_headers["Set-cookie: "] = "sessionId=" + this->_client.getSessionId() + "; HttpOnly";
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| " << "Create header : " << GRN << "OK" << RST << std::endl;
 	}
@@ -315,7 +373,7 @@ std::string Response::generateCgi(std::string input_string){
 
         // Prepare the arguments for execve
         char *args[] = {const_cast<char *>("python3"),
-                        const_cast<char *>("website/cgi/encode_base64.py"),
+                        const_cast<char *>("website/cgi/base64encoder.py"),
                         const_cast<char *>(input_string.c_str()),
                         NULL};
 
@@ -338,15 +396,15 @@ std::string Response::generateCgi(std::string input_string){
         int status;
         waitpid(pid, &status, 0);
     }
-	if (!encoded_string.empty() && encoded_string.back() == '\n') {
+	/*if (!encoded_string.empty() && encoded_string.back() == '\n') {
             encoded_string.erase(encoded_string.size() - 1);
-    }
+    }*/
 	std::cout << "encoded string " << encoded_string << std::endl;
-    cgi_page += "<!DOCTYPE html>\n<html>\n<h1>Here is your encoded string</h1>\n<body>\n";
-    cgi_page += "<h3>" + encoded_string + "</h3>\n";
-    cgi_page += "</body>\n</html>\n";
+    //cgi_page += "<!DOCTYPE html>\n<html>\n<h1>Here is your encoded string</h1>\n<body>\n";
+    //cgi_page += "<h3>" + encoded_string + "</h3>\n";
+    //cgi_page += "</body>\n</html>\n";
 
-    return cgi_page;
+    return encoded_string;
 }
 
 // ------------------------------------------------------
@@ -390,8 +448,5 @@ void	Response::generateAutoIndex(std::string dir_requested){
 	}
 	auto_index += "</body>\n</html>\n";
 	this->_content = auto_index;
-	if (DEBUG_REPONSE) {
-		std::cout << "\t| " << "\t Create body : " << GRN << "OK" << RST << std::endl;
-	}
 	createContent("", 200, "autoindex");
 }

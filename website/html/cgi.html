@@ -47,14 +47,11 @@
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Let's convert that string in base 64 </h1>
-        <form action="/cgi" method="post">
-            <label for="input">Enter data:</label>
-            <input type="text" id="input" name="input">
-            <button type="submit">Run Converter</button>
-        </form>
-        <a href="index.html">Go Back to Home</a>
-    </div>
+    <h2>Base64 Encoder</h2>
+    <form action="../cgi/base64encoder.py" method="post">
+        <label for="input_string">Enter string:</label><br>
+        <input type="text" id="input_string" name="input_string" required><br>
+        <input type="submit" value="Encode">
+    </form>
 </body>
 </html>

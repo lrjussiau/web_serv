@@ -53,13 +53,37 @@ PathType getPathType(const std::string& path) {
 	return PATH_NOT_FOUND;
 }
 
-int setNonBlocking(int fd) {
-    // Set the file descriptor to non-blocking mode
+void    setNonBlocking(int fd, int server) {
+    struct linger	sl;
+	int 			opt = 1;
+
+    sl.l_onoff = 1;
+    sl.l_linger = 0;
     if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
         perror("fcntl F_SETFL");
-        return -1;
+        exit(EXIT_FAILURE);
     }
-    return 0;
+    if (server){
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
+        }
+	    if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
+		    perror("setsockopt SO_REUSEPORT");
+		    exit(EXIT_FAILURE);
+	    }
+    }
+    else{
+        if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
+        }
+        if (setsockopt(fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl))){
+            perror("setsockopt");
+            exit(EXIT_FAILURE);
+        }
+    }
+    return;
 }
 
 int hexToInt(const std::string& hexStr) {
@@ -67,4 +91,22 @@ int hexToInt(const std::string& hexStr) {
     int value;
     iss >> std::hex >> value;
     return value;
+}
+
+std::string generateSessionId(void){
+    size_t length = 32;
+    // Create a random device and a Mersenne Twister engine
+    std::random_device rd;
+    std::mt19937_64 eng(rd());
+
+    // Create a distribution to generate random bytes
+    std::uniform_int_distribution<unsigned long long> distr;
+
+    // Create a string stream to hold the session ID
+    std::ostringstream oss;
+    for (size_t i = 0; i < length / 8; ++i) {
+        oss << std::hex << std::setw(16) << std::setfill('0') << distr(eng);
+    }
+
+   return oss.str().substr(0, length); // Ensure the length matches exactly
 }

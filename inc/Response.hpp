@@ -27,6 +27,7 @@ class Response {
 		std::string generateCgi(std::string input_string);
 
 		bool		isMethodWrong();
+		bool		isCookie();
 		bool		isCGI();
 		bool		checkMimeType();
 		Location*	findLocation();
@@ -34,7 +35,7 @@ class Response {
 
 	public:
 		Response(void);
-		Response(Client client, ServerConfig server);
+		Response(Client &client, ServerConfig server);
 		~Response(void);
 		Response(const Response& src);
 

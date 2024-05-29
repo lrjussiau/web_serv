@@ -1,12 +1,21 @@
-----
+------ a tester -----
 
-POST - A refactor
+redirect
+cgi(error handling)
+index
+hostname->server_name
+post(big files)
 
-DELETE - A Implementer
+------ modules -------
 
-PAGE HTML UPLOAD
+DELETE
 
-CGI
+multi-language CGI
+cookies
 
-----
+-------- general-fin -------
 
+-gestion de la memoire(siege)
+-gestion des headers
+-gestion d'erreur
+-utilisation perror()!->reading errno evaluation 

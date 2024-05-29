@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hello</title><div id="content"></div>
+</head>
+<body>
+    <h1>Enter Your Name</h1>
+    <form action="/cookie" method="POST">
+        <label for="userName">Name:</label>
+        <input type="text" id="userName" name="userName" required>
+        <button type="submit">Submit</button>
+        <button onclick="location.href='index.html'">Go Back to Home</button>
+    </form>
+</body>
+</html>
+
+<script>
+	const data = '{{message}}';
+	document.getElementById('content').innerHTML = `<p>${data}</p>`;
+</script>
