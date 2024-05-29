@@ -61,3 +61,10 @@ int setNonBlocking(int fd) {
     }
     return 0;
 }
+
+int hexToInt(const std::string& hexStr) {
+    std::istringstream iss(hexStr);
+    int value;
+    iss >> std::hex >> value;
+    return value;
+}

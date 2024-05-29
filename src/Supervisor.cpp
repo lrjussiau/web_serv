@@ -297,35 +297,82 @@ void Supervisor::acceptNewConnection(int server_socket){
 	return;
 }
 
-void	Supervisor::readRequestFromClient(int client_socket){
+// void	Supervisor::readRequestFromClient(int client_socket){
+//     char buffer[100000];
+//     int bytes_read;
+
+//     memset(&buffer, '\0', sizeof buffer);
+// 	std::cout << "client socket " << client_socket << std::endl;
+//     bytes_read = recv(client_socket, &buffer, 100000, 0);
+//     if (bytes_read <= 0) {
+//         if (bytes_read == 0) {
+// 			perror("recv");
+//            std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
+//         }
+//         else {
+// 			std::cout << "recv error: " << strerror(errno) << std::endl;
+// 			perror("recv:");
+//             //std::cout << GRN << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" << RST << std::endl;
+//         }
+// 		//close(client_socket);
+// 		closeClient(client_socket);
+//     }
+//     else {
+// 		buffer[bytes_read] = '\0';
+// 		std::string request(buffer);
+//         std::cout << "request " << request << std::endl;
+// 		FD_SET(client_socket, &(this->_write_fds));
+// 		FD_CLR(client_socket, &(this->_read_fds));
+// 		//FD_CLR(client_socket, &(this->_all_sockets));
+// 		this->_clients_map[client_socket].setData(buffer);
+//     }
+// 	return;
+// }
+
+void Supervisor::readRequestFromClient(int client_socket) {
     char buffer[100000];
     int bytes_read;
+    std::ofstream request_file;
+    std::string request_file_path = PATH_TO_REQUESTS;
+	
+    request_file.open(request_file_path.c_str(), std::ios::out | std::ios::app | std::ios::binary);
+    if (!request_file.is_open()) {
+        std::cerr << "Failed to open request file" << std::endl;
+        closeClient(client_socket);
+        return;
+    }
 
     memset(&buffer, '\0', sizeof buffer);
-	std::cout << "client socket " << client_socket << std::endl;
-    bytes_read = recv(client_socket, &buffer, 100000, 0);
-    if (bytes_read <= 0) {
-        if (bytes_read == 0) {
-			perror("recv");
-           std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
-        }
-        else {
-			std::cout << "recv error: " << strerror(errno) << std::endl;
-			perror("recv:");
-            //std::cout << GRN << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" << RST << std::endl;
-        }
-		//close(client_socket);
-		closeClient(client_socket);
+    std::cout << "client socket " << client_socket << std::endl;
+
+
+    while ((bytes_read = recv(client_socket, &buffer, sizeof(buffer) - 1, 0)) > 0) {
+        if (bytes_read <= 0) {
+			if (bytes_read == 0) {
+				perror("recv");
+			std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
+			}
+			else {
+				std::cout << "recv error: " << strerror(errno) << std::endl;
+				perror("recv:");
+				//std::cout << GRN << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" << RST << std::endl;
+			}
+			//close(client_socket);
+			closeClient(client_socket);
+		} else {
+			request_file.write(buffer, bytes_read);
+			if (!request_file) {
+				std::cerr << "Failed to write to request file" << std::endl;
+				return;
+			}
+		}
+        memset(&buffer, '\0', sizeof buffer);
     }
-    else {
-		buffer[bytes_read] = '\0';
-		std::string request(buffer);
-        std::cout << "request " << request << std::endl;
-		FD_SET(client_socket, &(this->_write_fds));
-		FD_CLR(client_socket, &(this->_read_fds));
-		//FD_CLR(client_socket, &(this->_all_sockets));
-		this->_clients_map[client_socket].setData(buffer);
-    }
+	request_file.close();
+	this->_clients_map[client_socket].setData(PATH_TO_REQUESTS);
+	FD_SET(client_socket, &(this->_write_fds));
+	FD_CLR(client_socket, &(this->_read_fds));
+
 	return;
 }
 
@@ -351,6 +398,7 @@ void	Supervisor::writeResponseToClient(int client_socket){
 	}
 	else
 		std::cout << ORG << "successfully sent response" << RST <<  std::endl; 
+	unlink(PATH_TO_REQUESTS);
 	return;
 }
 

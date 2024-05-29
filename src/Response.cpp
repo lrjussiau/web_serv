@@ -88,15 +88,19 @@ Response::Response(Client client, ServerConfig server) : _client(client) , _serv
 		return;
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Mime Type : " << GRN << "OK" << RST << std::endl;
-		if (client.getRequestMethod() == "POST")
-			std::cout << "\t| " << GRN << "Create a 201 request" << RST << std::endl;
-		else
-			std::cout << "\t| " << GRN << "Create a 200 request" << RST << std::endl;
 	}
 	if (client.getRequestMethod() == "POST") {
+		if (DEBUG_REPONSE) {
+			std::cout << "\t| " << "Path to upload : " << GRN << path << RST << std::endl;
+			std::cout << "\t| " << GRN << "Create a 201 request" << RST << std::endl;
+		}
+		client.parsePostRequest(PATH_TO_REQUESTS, path);
 		createContent("", 201, "Created");
 		return;
 	} else {
+		if (DEBUG_REPONSE) {
+		std::cout << "\t| " << GRN << "Create a 200 request" << RST << std::endl;
+		}
 		createContent(path, 200, "OK");
 	}
 }
@@ -233,7 +237,7 @@ void 		Response::buildResponse(void){
 	}
 	if (DEBUG) {
 		std::cout << CYA << "Server Response: "<< std::endl;
-		std::cout << this->_status_line << std::endl;
+		std::cout << this->_status_line;
 		for (std::map<std::string, std::string>::iterator it = this->_headers.begin(); it != this->_headers.end(); ++it) {
 			std::cout << it->first << it->second << std::endl;
 		}

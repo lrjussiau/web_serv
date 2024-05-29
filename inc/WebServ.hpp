@@ -8,6 +8,8 @@
 
 # define DEBUG_REPONSE 1
 
+# define PATH_TO_REQUESTS "request_data"
+
 // COLORS
 #define RST "\033[0m"
 #define RED "\033[1;31m"

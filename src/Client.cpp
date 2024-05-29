@@ -51,17 +51,17 @@ std::string cleanString(const std::string& input) {
     return output;
 }
 
-void Client::setData(char *buffer) {
-    std::string buffer_str(buffer, 100000);
+void Client::setData(std::string filePath) {
+    std::ifstream file(filePath.c_str());
+    if (!file.is_open()) {
+        std::cerr << "Failed to open request file: " << filePath << std::endl;
+        return;
+    }
     std::string line;
-    std::istringstream buffer_stream(buffer_str);
-    std::string body;
-    std::string boundaryValue;
 
-    bool inBody = false;
-    bool findBoundary = false;
     int i = 0;
-    while (std::getline(buffer_stream, line)) {
+
+    while (std::getline(file, line)) {
         if (i == 0) {
             std::istringstream line_stream(line);
             line_stream >> this->_requestMethod >> this->_requestedUrl >> this->_requestProtocol;
@@ -81,28 +81,12 @@ void Client::setData(char *buffer) {
                 this->_requestMimetype = token;
             }
         }
-        if (this->_requestMethod == "POST" && !boundaryValue.empty() && line.find(boundaryValue) != std::string::npos) {
-            inBody = true;
-        }
         //cgi
-        if (this->_requestedUrl == "/cgi" && line.find("input") != std::string::npos){
+        if (this->_requestedUrl == "/cgi" && line.find("input") != std::string::npos) {
             this->_buffer = line.substr(6, line.length() - 6);
             break;
         }
-        if (line.find("Content-Type:") != std::string::npos && !findBoundary) {
-            boundaryValue = line.substr(line.find("boundary=") + 9);
-            findBoundary = true;
-        }
-        if (inBody) {
-            std::cout << "line : " << line;
-            body += line + "\n";
-        }
         i++;
-    }
-    if (this->_requestMethod == "POST"){
-        _boundary = cleanString(boundaryValue);
-        parsePostRequest(body);
-
     }
     if (DEBUG) {
         std::cout << YEL << "Client Request:" << std::endl;
@@ -114,6 +98,7 @@ void Client::setData(char *buffer) {
         std::cout << "Request Mimetype: " << this->_requestMimetype << RST << std::endl;
         std::cout << "Request Buffer: " << this->_buffer << RST << std::endl;
     }
+    file.close();
 }
 
 void Client::parseCgiPostRequest(std::string &body){
@@ -128,45 +113,70 @@ void Client::parseCgiPostRequest(std::string &body){
 }
 
 
-void Client::parsePostRequest(std::string &body) {
+void Client::parsePostRequest(std::string path_to_request, std::string path) {
     std::string line;
-    std::istringstream buffer_stream(body);
     bool inBody = false;
+    bool inBound = false;
+    bool findBoundary = false;
     std::ofstream file;
-    
-    while (std::getline(buffer_stream, line)) {
-        if (line.find("Content-Disposition:") != std::string::npos) {
-            std::istringstream iss(line);
-            std::string token;
-            while (iss >> token) {
-                if (token.find("filename=") != std::string::npos) {
-                    _postName = token.substr(token.find("filename=") + 10);
-                    _postName.erase(_postName.size() - 1);
-                    file.open(_postName, std::ios::binary);
-                }
+
+    std::ifstream request_file(path_to_request.c_str());
+    if (!request_file.is_open()) {
+        std::cerr << "Failed to open request file: " << path_to_request << std::endl;
+        return;
+    }
+
+    while (std::getline(request_file, line)) {
+        if (line.find(_boundary) != std::string::npos && findBoundary) {
+            inBound = true;
+        }
+        if (line.find("Content-Type:") != std::string::npos && !findBoundary) {
+            _boundary = line.substr(line.find("boundary=") + 9);
+            findBoundary = true;
+        }
+        if (inBound) {
+            if (line.find("Content-Disposition:") != std::string::npos) {
+				getPathToUpload(line, path);
                 if (!_postName.empty())
                     break;
+				file.open(_postName.c_str(), std::ios::binary);
             }
-        }
-        if (line == "\r") {
-            inBody = true;
-            continue;
-        }
-        if (inBody) {
-            if (line.find(_boundary) != std::string::npos) {
-                std::cout << RED << "OK" << RST << std::endl;
-                inBody = false;
-                file.close();
-                break;
-            } else {
-                file.write(line.c_str(), line.size());
-                file.write("\n", 1);
+            if (line == "\r") {
+                inBody = true;
+                continue;
+            }
+            if (inBody) {
+                std::string boundary = _boundary;
+                if (line.find(boundary.erase(_boundary.size() - 1)) != std::string::npos) {
+                    inBody = false;
+                    file.close();
+                    break;
+                } else {
+                    file.write(line.c_str(), line.size());
+                    file.write("\n", 1);
+                }
             }
         }
     }
     if (file.is_open()) {
         file.close();
     }
+    request_file.close();
+}
+
+void Client::getPathToUpload(std::string line, std::string path) {
+    std::istringstream iss(line);
+    std::string token;
+    while (iss >> token) {
+        if (token.find("filename=") != std::string::npos) {
+            _postName = path + "/";
+            _postName += token.substr(token.find("filename=") + 10);
+            _postName.erase(_postName.size() - 1);
+			if (DEBUG_REPONSE) {
+				std::cout << "\t| " << "Path to upload : " << GRN << _postName << RST << std::endl;
+			}
+    	}
+	}
 }
 
 // ------------------------------------------------------

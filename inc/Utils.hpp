@@ -35,6 +35,6 @@ public:
 std::string getTime(void);
 PathType getPathType(const std::string& path);
 int setNonBlocking(int fd);
+int hexToInt(const std::string& hexStr);
 
 #endif
-

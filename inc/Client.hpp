@@ -21,6 +21,7 @@ class Client {
 		std::string _boundary;
 
 		void	parsePostRequest(std::string &body);
+		void	getPathToUpload(std::string line, std::string path);
 
 	public:
 		Client(void);
@@ -29,7 +30,8 @@ class Client {
 		Client(const Client& src);
 		Client &operator=(const Client& src);
 
-		void		setData(char *buffer);
+		void		setData(std::string filePath);
+		void		parsePostRequest(std::string path_to_request, std::string path);
 
 		int	getSocket(void) const;
 		int	getServerSocket(void) const;
