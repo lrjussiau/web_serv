@@ -155,7 +155,7 @@ bool	Response::isCookie(Client *client) {
 }
 
 bool	Response::isCGI() {
-	if (_client->getRequestMethod() == "POST" && _client->getRequestedUrl() == "/cgi") {
+	if (_client->getRequestMethod() == "POST" && _client->getRequestedUrl() == "/cgi-bin") {
 		this->_content = generateCgi(_client->getBuffer());
 		createContent("", 201, "CGI");
 		return true;
@@ -311,7 +311,7 @@ std::string Response::findPath(Location *location) {
 	if (location == NULL) {
 		return (_server.root.erase(_server.root.size() - 1) + _client->getRequestedUrl());
 	} else {
-		if (location->path == "/cgi") {
+		if (location->path == "/cgi-bin") {
 			return (location->cgi_pass.erase(location->cgi_pass.size() - 1) + _client->getRequestedUrl());
 		}
 		return (location->root.erase(location->root.size() - 1) + _client->getRequestedUrl());
@@ -379,11 +379,11 @@ std::string Response::generateCgi(std::string input_string){
             encoded_string.erase(encoded_string.size() - 1);
     }*/
 	std::cout << "encoded string " << encoded_string << std::endl;
-    //cgi_page += "<!DOCTYPE html>\n<html>\n<h1>Here is your encoded string</h1>\n<body>\n";
-    //cgi_page += "<h3>" + encoded_string + "</h3>\n";
-    //cgi_page += "</body>\n</html>\n";
+    cgi_page += "<!DOCTYPE html>\n<html>\n<h1>Here is your encoded string</h1>\n<body>\n";
+    cgi_page += "<h3>" + encoded_string + "</h3>\n";
+    cgi_page += "</body>\n</html>\n";
 
-    return encoded_string;
+    return cgi_page;
 }
 
 // ------------------------------------------------------
