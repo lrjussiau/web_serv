@@ -103,7 +103,7 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 			std::cout << "\t| " << GRN << "Create a 201 request" << RST << std::endl;
 		}
 		client->parsePostRequest(PATH_TO_REQUESTS, path);
-		createContent("", 201, "Created");
+		createContent("./website/html/succes_upload.html", 201, "Created");
 		return;
 	} else {
 		if (DEBUG_REPONSE) {
@@ -234,7 +234,7 @@ void Response::createContent(std::string path, int status_code, std::string stat
     std::ostringstream content_stream;
     std::string content;
 
-    if (status_message != "autoindex" && status_message != "CGI" && status_message != "COOKIE" && _client->getRequestMethod() != "POST" ) {
+    if (status_message != "autoindex" && status_message != "CGI" && status_message != "COOKIE") {
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
             std::cerr << RED << "Error: Could not open file: " << RST << path << std::endl;
