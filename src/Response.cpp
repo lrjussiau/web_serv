@@ -78,7 +78,7 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 					if (DEBUG_REPONSE) {
 						std::cout << "\t| " << GRN << "\t is a directory, but find index.html inside" << RST << std::endl;
 					}
-					path += "/index.html";
+					path += "index.html";
 				} else {
 					handleDirectory(path, location);
 					return;
@@ -103,7 +103,7 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 			std::cout << "\t| " << GRN << "Create a 201 request" << RST << std::endl;
 		}
 		client->parsePostRequest(PATH_TO_REQUESTS, path);
-		createContent("./website/html/succes_upload.html", 201, "Created");
+		createContent("./website/html/sucess.html", 201, "Created");
 		return;
 	} else {
 		if (DEBUG_REPONSE) {
@@ -143,48 +143,12 @@ bool	Response::isMethodWrong() {
 	return false;
 }
 
-//close?file
-std::string readFile(const std::string &path) {
-    std::ifstream file(path);
-	file.open(path);
-    if (!file.is_open()) {
-        throw std::runtime_error("Could not open file");
-    }
-    return std::string((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-}
-
-std::string replacePlaceholder(const std::string &html, const std::string &placeholder, const std::string &value) {
-    std::string result = html;
-    size_t pos = result.find(placeholder);
-    while (pos != std::string::npos) {
-        result.replace(pos, placeholder.length(), value);
-        pos = result.find(placeholder, pos + value.length());
-    }
-    return result;
-}
-
 bool	Response::isCookie(Client *client) {
 	std::cout << "mur " << client->getRequestedUrl() << std::endl;
-	if (client->getRequestedUrl() == "/cookie.html" || client->getRequestedUrl() == "/cookie" ){
-		try {
-			std::string html = readFile("./website/html/cookie.html");
-			if (client->getRequestMethod() == "GET"){
-				std::cout << "I am in the get for cookie" <<std::endl;
-				std::string name  = client->getSessionName();
-				std::cout << "client sesh name : " << client->getSessionName() << std::endl;
-				this->_content = replacePlaceholder(html, "{{message}}", name);
-				createContent("", 200, "COOKIE");
-			}
-			else{
-				std::cout << "I am in the post for cookie" <<std::endl;
-				client->setSessionName(_client->getBuffer());
-				std::cout << "client session: " << client->getSessionName() << std::endl;
-				this->_content = replacePlaceholder(html, "{{message}}",  client->getSessionName());
-				createContent("", 201, "COOKIE");
-			}
-			} catch (const std::exception &e) {
-				std::cout << "Error 500" << e.what() <<std::endl;
-		}
+	if (client->getRequestedUrl() == "/cookie" ){
+		std::cout << "I am in the post for cookie" <<std::endl;
+		client->setSessionName(_client->getBuffer());
+		createContent("./website/html/sucess.html", 201, "COOKIE");
 		return true;
 	}
 	return false;
@@ -229,12 +193,23 @@ void	Response::handleDirectory(std::string path, Location *location) {
 // 					  Create Reponse
 // ------------------------------------------------------
 
+std::string replacePlaceholder(const std::string &html, const std::string &placeholder, const std::string &value) {
+    std::string result = html;
+    size_t pos = result.find(placeholder);
+    while (pos != std::string::npos) {
+        result.replace(pos, placeholder.length(), value);
+        pos = result.find(placeholder, pos + value.length());
+    }
+    return result;
+}
+
 void Response::createContent(std::string path, int status_code, std::string status_message) {
     std::ifstream file;
     std::ostringstream content_stream;
     std::string content;
 
-    if (status_message != "autoindex" && status_message != "CGI" && status_message != "COOKIE") {
+	std::cout << "Path: " << path << std::endl;
+    if (status_message != "autoindex" && status_message != "CGI") {
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
             std::cerr << RED << "Error: Could not open file: " << RST << path << std::endl;
@@ -242,7 +217,13 @@ void Response::createContent(std::string path, int status_code, std::string stat
         }
         content_stream << file.rdbuf();
         content = content_stream.str();
-        this->_content = content;
+		if (path == "./website/html/index.html"){
+			std::string name  = _client->getSessionName();
+			std::cout << "name: " << name << std::endl;
+			this->_content = replacePlaceholder(content, "{{message}}", name);
+		}
+		else
+        	this->_content = content;
 		file.close();
 		if (DEBUG_REPONSE) {
 			std::cout << "\t| " << "Create content : " << GRN << "OK" << RST << std::endl;
