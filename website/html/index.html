@@ -25,13 +25,27 @@
         button:hover {
             background-color: #0056b3;
         }
+        #content {
+            font-size: 24px; /* Increase font size */
+            padding: 20px; /* Add padding */
+            margin: 20px auto; /* Center and add margin */
+            width: 80%; /* Set width */
+            height: auto; /* Auto height */
+            text-align: center; /* Center the text */
+        }
     </style>
 </head>
 <body>
     <h1>Welcome to the Index Page</h1>
+    <div id="content"></div>
     <button onclick="location.href='button.html'">Test Button</button>
     <button onclick="location.href='upload.html'">Upload</button>
     <button onclick="location.href='cgi.html'">CGI</button>
     <button onclick="location.href='cookie.html'">Cookie</button>
 </body>
 </html>
+
+<script>
+	const data = '{{message}}';
+	document.getElementById('content').innerHTML = `<p>${data}</p>`;
+</script>
