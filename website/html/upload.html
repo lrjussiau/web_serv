@@ -45,18 +45,31 @@
         a:hover, button:hover {
             background-color: #0056b3;
         }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <img src="../static/test.png" alt="Test Favicon" type="image/png">
         <h1>Upload File</h1>
-        <form action="/upload" method="post" enctype="multipart/form-data">
+        <form action="/cgi-bin/upload.py" method="post" enctype="multipart/form-data">
             <label for="file">Choose file to upload:</label>
             <input type="file" id="file" name="file">
             <button type="submit">Upload</button>
         </form>
+        <a href="index.html">Go Back to Home</a>
+        <h2>Uploaded Files</h2>
+        <ul id="file-list">
+            <!-- File list will be injected here by the CGI script -->
+            <!-- CGI script will generate list items here -->
+            <!-- Include a reference to the CGI script that will list the files -->
+            <iframe src="/cgi-bin/list_files.py" style="border:none;width:100%;height:auto;"></iframe>
+        </ul>
     </div>
 </body>
-</html>
 </html>
