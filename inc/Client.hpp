@@ -19,12 +19,14 @@ class Client {
 		std::string _postName;
 		std::string _buffer;
 		std::string _boundary;
+		std::string	_sessionId;
+		std::string	_sessionName;
 
 		void	parsePostRequest(std::string &body);
 
 	public:
 		Client(void);
-		Client(int server_socket, int socket);
+		Client(int server_socket, int socket, std::string sessionId);
 		~Client(void);
 		Client(const Client& src);
 		Client &operator=(const Client& src);
@@ -41,6 +43,9 @@ class Client {
 		std::string getRequestMimetype(void) const;
 		std::string getPostName(void) const;
 		std::string getBuffer(void) const;
+		std::string	getSessionId(void) const;
+		std::string	getSessionName(void) const;
+		void		setSessionName(std::string session_name);
 		void parseCgiPostRequest(std::string &body);
 };
 

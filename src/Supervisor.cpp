@@ -161,11 +161,12 @@ void	Supervisor::manageOperations(void){
 
 void Supervisor::acceptNewConnection(int server_socket){
     int 			client_socket;
+	std::string		cookie =  generateSessionId();
 
     client_socket = accept(server_socket, NULL, NULL);
 	/*set new session id to this client attribute  + set info in map<std::string cookie, std::string attrinbutes>*/
 	setNonBlocking(client_socket, 0);
-	Client	new_client(server_socket, client_socket);
+	Client	new_client(server_socket, client_socket, cookie);
     if (client_socket == -1) {
         std::cout << RED << "[Server " << server_socket << "] Accept error" << RST << std::endl;
         return ;

@@ -33,8 +33,9 @@ public:
 };
 
 std::string getTime(void);
-PathType getPathType(const std::string& path);
-void    setNonBlocking(int fd, int server);
+PathType    getPathType(const std::string& path);
+void        setNonBlocking(int fd, int server);
+std::string generateSessionId(void);
 
 #endif
 

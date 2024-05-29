@@ -85,3 +85,22 @@ void    setNonBlocking(int fd, int server) {
     }
     return;
 }
+
+
+std::string generateSessionId(void){
+    size_t length = 32;
+    // Create a random device and a Mersenne Twister engine
+    std::random_device rd;
+    std::mt19937_64 eng(rd());
+
+    // Create a distribution to generate random bytes
+    std::uniform_int_distribution<unsigned long long> distr;
+
+    // Create a string stream to hold the session ID
+    std::ostringstream oss;
+    for (size_t i = 0; i < length / 8; ++i) {
+        oss << std::hex << std::setw(16) << std::setfill('0') << distr(eng);
+    }
+
+   return oss.str().substr(0, length); // Ensure the length matches exactly
+}

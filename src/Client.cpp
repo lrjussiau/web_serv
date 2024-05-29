@@ -9,7 +9,8 @@ Client::Client(void) : _socket(-1), _server_socket(-1){
 	return;
 }
 
-Client::Client(int server_socket, int client_socket) : _socket(client_socket), _server_socket(server_socket){
+Client::Client(int server_socket, int client_socket, std::string sessionId) : _socket(client_socket), _server_socket(server_socket),  _sessionId(sessionId), _sessionName("stranger"){
+    std::cout << "client constructor called" << std::endl;
 	return;
 }
 
@@ -34,6 +35,8 @@ Client&	Client::operator=(const Client& src){
 	this->_requestMimetype = src.getRequestMimetype();
 	this->_postName = src.getPostName();
 	this->_buffer = src.getBuffer();
+    this->_sessionName = src.getSessionName();
+    this->_sessionId = src.getSessionId();
 	return *this;
 }
 
@@ -49,6 +52,11 @@ std::string cleanString(const std::string& input) {
         }
     }
     return output;
+}
+
+void    Client::setSessionName(std::string session_name){
+    this->_sessionName = session_name;
+    return;
 }
 
 void Client::setData(char *buffer) {
@@ -87,6 +95,11 @@ void Client::setData(char *buffer) {
         //cgi
         if (this->_requestedUrl == "/cgi" && line.find("input") != std::string::npos){
             this->_buffer = line.substr(6, line.length() - 6);
+            break;
+        }
+        //cookie
+        if (this->_requestedUrl == "/cookie" && line.find("userName") != std::string::npos){
+            this->_buffer = line.substr(9, line.length() - 9);
             break;
         }
         if (line.find("Content-Type:") != std::string::npos && !findBoundary) {
@@ -211,4 +224,12 @@ std::string Client::getPostName(void) const{
 
 std::string Client::getBuffer(void) const{
 	return this->_buffer;
+}
+
+std::string	Client::getSessionId(void) const{
+    return this->_sessionId;
+}
+
+std::string	Client::getSessionName(void) const{
+    return this->_sessionName;
 }
