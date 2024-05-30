@@ -23,7 +23,7 @@ struct ServerConfig {
     std::string                     root;
     std::string                     index;
     std::map<int, std::string>    	error_pages;
-    int                             client_max_body_size;
+    size_t                          client_max_body_size;
     std::map<std::string, Location> locations;
 };
 
@@ -36,12 +36,10 @@ class Config {
         Location	parseLocationBlock(std::ifstream &file, std::string path);
 		void		loadFromFile(const std::string &filename);
 		void		printConfig() const;
-		int			parseSize(const std::string &size_str);
+		size_t		parseSize(const std::string &size_str);
         void        parseErrorPage(std::ifstream &file, ServerConfig &server, std::string line);
         void        checkConfig() const;
         bool        checkIpv4(ServerConfig &server) const;
-        bool        checkIpv6(ServerConfig &server) const;
-        
 
     public:
 		Config();
