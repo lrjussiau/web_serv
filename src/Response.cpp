@@ -395,7 +395,7 @@ std::string Response::generateCgi(std::string script, std::string input_string){
 	std::cout << "In generateCgi" << script_extension << std::endl;
 	if (script_extension == "py"){
 		args[0] = const_cast<char *>("python3");
-		interpreter = "/usr/bin/python3";
+		interpreter = "/usr/local/munki/Python.framework/Versions/3.8/bin/python3.8";
 	}
 	else if (script_extension == "php?"){
 		args[0] = const_cast<char *>("php");

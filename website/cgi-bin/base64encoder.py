@@ -1,8 +1,15 @@
-#!/usr/bin/python3
+#!/usrbin/python3
 
 import cgi
 import cgitb
 import base64
+
+#cgitb.enable()
+
+form = cgi.FieldStorage()
+input_string = form.getvalue("input_string")
+for field in form.keys():
+    print("<li>{}: {}</li>".format(field, form[field].value))
 
 style = """<style>
         body {
@@ -24,12 +31,6 @@ style = """<style>
         }
     </style>"""
 
-#cgitb.enable()
-
-form = cgi.FieldStorage()
-input_string = form.getvalue("input_string")
-for field in form.keys():
-    print("<li>{}: {}</li>".format(field, form[field].value))
 print(f"value: {input_string}")
 if input_string:
     encoded_string = base64.b64encode(input_string.encode()).decode()
