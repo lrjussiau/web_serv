@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Upload File</title>
-    <link rel="icon" href="/static/favicon.webp" type="image/webp">
+    <link rel="icon" href="/static/favicon-16x16.png" type="image/webp">
     <style>
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
         body {
             background-color: #f2f2f2;
             color: #333;
@@ -19,6 +22,10 @@
         .container {
             text-align: center;
             width: 80%;
+        }
+        hr {
+            margin: 20px 0;
+            opacity: 0.2;
         }
         h1 {
             font-size: 3rem;
@@ -63,7 +70,6 @@
             <input type="file" id="file" name="file">
             <button type="submit">Upload</button>
         </form>
-        <a href="index.html">Go Back to Home</a>
         <h2>Uploaded Files</h2>
         <ul id="file-list">
             <iframe id="fileListFrame" src="upload" style="width:800px; height:300px;"></iframe>
@@ -72,6 +78,8 @@
                 <button type="button" onclick="deleteFile()">Supprimer le fichier</button>
             </form>
         </ul>
+        <hr>
+        <div><a href="index.html">Go Back to Home</a></div>
     </div>
 </body>
 </html>
@@ -84,7 +92,7 @@
             .then(response => response.text())
             .then(data => {
                 alert("Résultat de la suppression: " + data);
-                location.reload(); // Option pour recharger la page et actualiser la liste des fichiers
+                document.getElementById('fileListFrame').contentWindow.location.reload();
             })
             .catch(error => console.error('Erreur:', error));
         } else {

@@ -32,6 +32,7 @@ class Response {
 		bool		isCookie(Client *client);
 		bool		isCGI();
 		bool		checkMimeType();
+		bool		isRedirect();
 		Location*	findLocation();
 		std::string findPath(Location* location);
 
