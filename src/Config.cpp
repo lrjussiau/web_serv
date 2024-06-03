@@ -424,11 +424,15 @@ void Config::checkConfig() const {
         }
         for (std::map<std::string, Location>::const_iterator loc_it = server.locations.begin(); loc_it != server.locations.end(); ++loc_it) {
             const Location& loc = loc_it->second;
-            if (loc.allow_methods.empty()) {
-                throw Except("Location block missing allow_methods directive");
-            }
-            if (loc.root.empty()) {
-                throw Except("Location block missing root directive");
+            if (!loc.redirect.empty())
+                continue;
+            else {
+                if (loc.allow_methods.empty()) {
+                    throw Except("Location block missing allow_methods directive");
+                }
+                if (loc.root.empty()) {
+                    throw Except("Location block missing root directive");
+                }
             }
         }
     }
@@ -444,7 +448,7 @@ void Config::parseConfigFile(const std::string &filename) {
 			std::cout << GRN << "Config file parsed successfully" << RST << std::endl;
 			std::cout << BLU << "----------------------------- << Config << -----------------------------" << std::endl;
 			printConfig();
-			std::cout << "------------------------------------------------------------------------"<< RST << std::endl;
+			std::cout << "----------------------------------------------------------------------"<< RST << std::endl;
 		}
         checkConfig();
 }

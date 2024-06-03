@@ -1,14 +1,8 @@
 ------ a tester -----
 
-redirect
 cgi(error handling)
-index
-hostname->server_name
-post(big files)
 
 ------ modules -------
-
-DELETE
 
 multi-language CGI
 cookies
@@ -17,5 +11,9 @@ cookies
 
 -gestion de la memoire(siege)
 -gestion des headers
+
+
+
+En cours 
 -gestion d'erreur
 -utilisation perror()!->reading errno evaluation 

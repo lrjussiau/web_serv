@@ -43,6 +43,11 @@ Client&	Client::operator=(const Client& src){
 // 					     Setters
 // ------------------------------------------------------
 
+void    Client::setRequestedUrl(std::string url){
+    this->_requestedUrl = url;
+    return;
+}
+
 std::string cleanString(const std::string& input) {
     std::string output;
     for (std::string::const_iterator it = input.begin(); it != input.end(); ++it) {
@@ -107,7 +112,6 @@ void Client::setData(std::string filePath) {
         std::cout << "Request Protocol: " << this->_requestProtocol << std::endl;
         std::cout << "Request Connection: " << this->_requestConnection << std::endl;
         std::cout << "Request Mimetype: " << this->_requestMimetype << RST << std::endl;
-        std::cout << "Request Buffer: " << this->_buffer << RST << std::endl;
     }
     file.close();
 }

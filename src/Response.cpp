@@ -36,13 +36,16 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 		std::cout << "\t| Check Method : " << GRN << "OK" << RST << std::endl;
 	}
 	if (isCookie(client)) {
-		std::cout << ORG << "Client :" << _client->getSessionName() << RST << std::endl;
 		return;
 	}
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Cookie : " << GRN << "OK" << RST << std::endl;
 	}
-	// Implement redirect
+	if (isRedirect())
+		return;
+	if (DEBUG_REPONSE) {
+		std::cout << "\t| Check Redirect : " << GRN << "OK" << RST << std::endl;
+	}
 	if (isCGI())
 		return;
 	if (DEBUG_REPONSE) {
@@ -148,8 +151,9 @@ bool	Response::isMethodWrong() {
 
 bool	Response::isCookie(Client *client) {
 	if (client->getRequestedUrl() == "/cookie" ){
-		std::cout << "I am in the post for cookie" <<std::endl;
+		std::cout << "\t| Assign name to cookie client" <<std::endl;
 		client->setSessionName(_client->getBuffer());
+		std::cout << "\t| Client name : " << ORG << _client->getSessionName() << RST << std::endl;
 		createContent("./website/html/sucess.html", 201, "COOKIE");
 		return true;
 	}
@@ -163,14 +167,26 @@ bool	Response::isCGI() {
 		return true;
 	}
 	if (_client->getRequestMethod() == "GET" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
-		std::cout << "helo" << std::endl;
 		this->_content = generateCgi(_client->getRequestedUrl(), "");
-		std::cout << "helo" << std::endl;
 		createContent("", 200, "CGI");
 		return true;
-
 	}
 	return false;
+}
+
+bool	Response::isRedirect() {
+	for (std::map<std::string, Location>::iterator it = _server.locations.begin(); it != _server.locations.end(); ++it) {
+		size_t pos = _client->getRequestedUrl().find(it->first);
+
+		if (pos != std::string::npos) {
+			if (!it->second.redirect.empty()){
+				std::cout << "\t| " << GRN << "A redirect response is made" << RST << std::endl;
+				buildRedirectResponse(it->second.redirect);
+				return (true);
+			}
+		}
+	}
+	return (false);
 }
 
 void	Response::handleDirectory(std::string path, Location *location) {
@@ -231,9 +247,8 @@ void Response::createContent(std::string path, int status_code, std::string stat
         }
         content_stream << file.rdbuf();
         content = content_stream.str();
-		if (path == "./website/html/index.html"){
+		if (path == "./website/html/index.html") {
 			std::string name  = _client->getSessionName();
-			std::cout << "name: " << name << std::endl;
 			this->_content = replacePlaceholder(content, "{{message}}", name);
 		}
 		else
@@ -299,7 +314,7 @@ void 		Response::buildResponse(void){
 		for (std::map<std::string, std::string>::iterator it = this->_headers.begin(); it != this->_headers.end(); ++it) {
 			std::cout << it->first << it->second << std::endl;
 		}
-		std::cout << CYA << this->_content << RST << std::endl;
+		// std::cout << CYA << this->_content << RST << std::endl;
 	}
 }
 
@@ -316,11 +331,11 @@ Location* Response::findLocation() {
 		size_t pos = _client->getRequestedUrl().find(it->first);
 
 		if (pos != std::string::npos) {
-			if (!it->second.redirect.empty()){
-				std::cout << GRN << "A redirect response is made" << RST << std::endl;
-				buildRedirectResponse(it->second.redirect);
-				return (NULL);
-			}
+			// if (!it->second.redirect.empty()){
+			// 	std::cout << GRN << "\t| A redirect response is made" << RST << std::endl;
+			// 	buildRedirectResponse(it->second.redirect);
+			// 	return (NULL);
+			// }
 			if (_client->getRequestedUrl()[it->first.size()] != '.')
 				return &(it->second);
 		}

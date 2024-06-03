@@ -21,16 +21,4 @@ int main(int argc, char **argv) {
     } catch (const Except& e) {
         std::cout << RED << "Caught an exception: " << e.what() << RST << std::endl;
     }
-
-	/*Client client;
-
-    // Define a sample HTTP request string
-    const char* request = 
-        "GET /bioindex.htm HTTP/1.1\r\n"
-        "Host: burger.com\r\n";
-
-    // Call setData method with the request string
-    client.setData(const_cast<char*>(request));*/
-
-
 }

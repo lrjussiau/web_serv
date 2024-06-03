@@ -50,5 +50,11 @@
 
 <script>
 	const data = '{{message}}';
-	document.getElementById('content').innerHTML = `<p>${data}</p>`;
+	const contentElement = document.getElementById('content');
+	if (data.includes('stranger')) {
+		contentElement.innerHTML = '';
+	} else {
+		contentElement.innerHTML = `<p>Hello ${data}</p>`;
+	}
 </script>
+

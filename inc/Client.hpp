@@ -35,6 +35,7 @@ class Client {
 
 		void		setData(std::string filePath);
 		void		parsePostRequest(std::string path_to_request, std::string path);
+		void 		setRequestedUrl(std::string url);
 
 		int	getSocket(void) const;
 		int	getServerSocket(void) const;

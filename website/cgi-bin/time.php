@@ -28,6 +28,6 @@ $current_time = date('Y-m-d H:i:s');
 </head>
 <body>
     <h1>The current time in Switzerland is: <?php echo $current_time; ?></h1>
-	<button onclick="location.href='index.html'">Go Back to Home</button>
+	<button onclick="location.href='../index.html'">Go Back to Home</button>
 </body>
 </html>
