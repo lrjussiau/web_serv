@@ -1,11 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Index Page</title>
     <link rel="icon" href="../static/favicon-16x16.png" type="image/webp">
     <style>
+        @import url('https://fonts.googleapis.com/css?family=Poppins&display=swap');
+
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+
         body {
             background-color: #f2f2f2;
             color: #333;
@@ -13,6 +20,7 @@
             text-align: center;
             margin-top: 50px;
         }
+
         button {
             padding: 10px 20px;
             font-size: 16px;
@@ -22,19 +30,28 @@
             border: none;
             border-radius: 5px;
         }
+
         button:hover {
             background-color: #0056b3;
         }
+
         #content {
-            font-size: 24px; /* Increase font size */
-            padding: 20px; /* Add padding */
-            margin: 20px auto; /* Center and add margin */
-            width: 80%; /* Set width */
-            height: auto; /* Auto height */
-            text-align: center; /* Center the text */
+            font-size: 24px;
+            /* Increase font size */
+            padding: 20px;
+            /* Add padding */
+            margin: 20px auto;
+            /* Center and add margin */
+            width: 80%;
+            /* Set width */
+            height: auto;
+            /* Auto height */
+            text-align: center;
+            /* Center the text */
         }
     </style>
 </head>
+
 <body>
     <h1>Welcome to the Index Page</h1>
     <div id="content"></div>
@@ -45,7 +62,9 @@
     <button onclick="location.href='time.html'">Time</button>
     <button onclick="location.href='color.html'">Color</button>
     <button onclick="location.href='chunked.html'">Chunked</button>
+    <button onclick="location.href='pong.html'" style="background-color: rgb(255, 59, 219);">Pong</button>
 </body>
+
 </html>
 
 <script>
