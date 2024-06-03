@@ -1,5 +1,6 @@
 #include "../inc/Utils.hpp"
 
+
 BlockParser::BlockParser(const std::string& inputData) : data(inputData), pos(0) {}
 
 std::string BlockParser::getNextBlock() {
@@ -109,4 +110,10 @@ std::string generateSessionId(void){
     }
 
    return oss.str().substr(0, length); // Ensure the length matches exactly
+}
+
+void signalHandler(int signum) {
+    std::cout << "Interrupt signal (" << signum << ") received.\n";
+    running = false;
+    return;
 }

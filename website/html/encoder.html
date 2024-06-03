@@ -51,11 +51,14 @@
     </style>
 </head>
 <body>
-    <h2>Base64 Encoder</h2>
-    <form action="../cgi-bin/base64encoder.py" method="POST">
-        <label for="input_string">Enter string:</label><br>
-        <input type="text" name="input" required><br>
-        <input type="submit" value="Encode">
-    </form>
+    <div class="container">
+        <h1>Encode String in Base64</h1>
+        <form action="../cgi-bin/base64encoder.py" method="post">
+            <label for="input">Enter a string:</label><br>
+            <input type="text" id="input" name="input"><br><br>
+            <input type="submit" value="Submit">
+        </form>
+    </div>
+    </body>
 </body>
 </html>

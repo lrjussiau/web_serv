@@ -1,4 +1,5 @@
 #include "../inc/Response.hpp"
+#include "../inc/Client.hpp"
 
 // ------------------------------------------------------
 // 					Canonical Form
@@ -161,8 +162,11 @@ bool	Response::isCookie(Client *client) {
 }
 
 bool	Response::isCGI() {
+	std::cout << " I am in : " << _client->getRequestedUrl() <<std::endl;
 	if (_client->getRequestMethod() == "POST" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
-		this->_content = generateCgi(_client->getRequestedUrl(), "");
+		std::cout << "hh" << _client->getBuffer() << std::endl;
+		this->_content = generateCgi(_client->getRequestedUrl(), _client->getBuffer());
+		std::cout << "content" << this->_content<< std::endl;
 		createContent("", 201, "CGI");
 		return true;
 	}

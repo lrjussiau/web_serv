@@ -2,6 +2,7 @@
 #define UTILS_HPP
 
 #include "WebServ.hpp"
+//#include "Supervisor.hpp"
 
 enum PathType {
     PATH_NOT_FOUND,
@@ -37,5 +38,6 @@ int         hexToInt(const std::string& hexStr);
 PathType    getPathType(const std::string& path);
 void        setNonBlocking(int fd, int server);
 std::string generateSessionId(void);
+void        signalHandler(int signum);
 
 #endif

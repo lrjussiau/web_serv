@@ -1,13 +1,7 @@
 #include "../inc/Supervisor.hpp"
+#include "../inc/Server.hpp"
 
 Supervisor::~Supervisor(void){
-	std::cout << GRN <<  "Closing all connections" << RST << std::endl;
-	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
-		close(it->first);
-	}
-	for (std::map<int, Client*>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
-		close(it->first);
-	}
 	return;
 }
 
@@ -55,6 +49,17 @@ int		Supervisor::isServer(int socket) const{
 	if (it == this->_servers_map.end())
 		return 0;
 	return 1;
+}
+
+void		Supervisor::shutDown(void){
+	std::cout << GRN <<  "Closing all connections" << RST << std::endl;
+	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
+		close(it->first);
+	}
+	for (std::map<int, Client*>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
+		close(it->first);
+	}
+	exit(0);
 }
 
 /*				server creation/deletion				*/
@@ -115,7 +120,6 @@ void	Supervisor::closeClient(int client_socket){
     FD_CLR(client_socket, &this->_all_sockets);
     FD_CLR(client_socket, &this->_read_fds);
     FD_CLR(client_socket, &this->_write_fds);
-    //this->_clients_map.erase(client_socket);
 	this->_clients_map.erase(it);
 	updateFdMax();
 
@@ -123,11 +127,16 @@ void	Supervisor::closeClient(int client_socket){
 
 void	Supervisor::manageOperations(void){
 	while (1) {
+		if (running != true)
+			shutDown();
 		fd_set read_fds = this->_read_fds;
 		fd_set write_fds = this->_write_fds;
         if (select(this->_fd_max + 1, &read_fds, &write_fds, NULL, &(this->_timer)) == -1) {
             fprintf(stderr, "[Server] Select error: %s\n", strerror(errno));
-            exit(1);
+			if (running != true)
+				shutDown();
+			else
+            	exit(-1);
         }
        	std::cout << YEL << "[Servers] Waiting..." << RST << std::endl;
 		for (int fd = 0; fd <= this->_fd_max; fd++) {
