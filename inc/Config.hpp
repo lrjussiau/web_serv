@@ -2,7 +2,6 @@
 #define CONFIG_HPP
 
 #include "WebServ.hpp"
-#include "Utils.hpp"
 
 struct Location {
     std::string                 path;

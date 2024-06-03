@@ -1,3 +1,4 @@
+
 #ifndef WEBSERV_HPP
 # define WEBSERV_HPP
 
@@ -47,6 +48,8 @@
 #include <sys/stat.h>
 #include <netdb.h>
 #include <signal.h>
+
+extern std::atomic<bool> running;
 
 // #include "Config.hpp"
 // #include "Utils.hpp"

@@ -1,4 +1,5 @@
 #include "../inc/Response.hpp"
+#include "../inc/Client.hpp"
 
 // ------------------------------------------------------
 // 					Canonical Form
@@ -157,8 +158,11 @@ bool	Response::isCookie(Client *client) {
 }
 
 bool	Response::isCGI() {
+	std::cout << " I am in : " << _client->getRequestedUrl() <<std::endl;
 	if (_client->getRequestMethod() == "POST" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
-		this->_content = generateCgi(_client->getRequestedUrl(), "");
+		std::cout << "hh" << _client->getBuffer() << std::endl;
+		this->_content = generateCgi(_client->getRequestedUrl(), _client->getBuffer());
+		std::cout << "content" << this->_content<< std::endl;
 		createContent("", 201, "CGI");
 		return true;
 	}
@@ -401,7 +405,7 @@ std::string Response::generateCgi(std::string script, std::string input_string){
 	std::cout << "In generateCgi" << script_extension << std::endl;
 	if (script_extension == "py"){
 		args[0] = const_cast<char *>("python3");
-		interpreter = "/usr/local/munki/Python.framework/Versions/3.8/bin/python3.8";
+		interpreter = "/usr/bin/python3";
 	}
 	else if (script_extension == "php?"){
 		args[0] = const_cast<char *>("php");

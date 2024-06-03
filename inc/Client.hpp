@@ -49,7 +49,7 @@ class Client {
 		std::string	getSessionId(void) const;
 		std::string	getSessionName(void) const;
 		void		setSessionName(std::string session_name);
-		//void parseCgiPostRequest(std::string &body);
+		void parseCgiPostRequest(std::string &body);
 };
 
 #endif

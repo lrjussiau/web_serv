@@ -1,4 +1,5 @@
 #include "../inc/Config.hpp"
+#include "Utils.hpp"
 
 
 // ------------------------------------------------------
@@ -26,6 +27,7 @@ Config &Config::operator=(const Config &src) {
 
 // ------------------------------------------------------
 // 					  Utils Functons
+
 // ------------------------------------------------------
 
 void trimSemicolon(std::string& str) {

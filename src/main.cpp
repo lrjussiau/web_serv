@@ -3,6 +3,9 @@
 #include "../inc/Utils.hpp"
 #include "../inc/Supervisor.hpp"
 
+std::atomic<bool> running (true);
+
+
 void handle_sigpipe(int sig) {
     std::cerr << "Caught SIGPIPE: " << sig << std::endl;
 }
@@ -10,6 +13,7 @@ void handle_sigpipe(int sig) {
 int main(int argc, char **argv) {
 
     signal(SIGPIPE, handle_sigpipe);
+    signal(SIGINT, signalHandler);
 	try {
 		if (argc != 2)
         	throw Except("Please provide a config file. ./web_serv \"file\"");

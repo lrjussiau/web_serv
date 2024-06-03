@@ -1,10 +1,12 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-#include "WebServ.hpp"
-#include "Client.hpp"
-#include "Server.hpp"
+//#include "WebServ.hpp"
+//#include "Client.hpp"
+#include "Config.hpp"
 #include "Utils.hpp"
+
+class Client;
 
 class Response {
 

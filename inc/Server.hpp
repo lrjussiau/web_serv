@@ -1,11 +1,10 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include "WebServ.hpp"
+//#include "WebServ.hpp"
+//#include "Utils.hpp"
 #include "Config.hpp"
-#include "Utils.hpp"
 // class Config;
-// struct ServerConfig;
 
 class Server {
 

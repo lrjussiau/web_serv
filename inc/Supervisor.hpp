@@ -1,20 +1,16 @@
 #ifndef SUPERVISOR_HPP
 #define SUPERVISOR_HPP
 
-#include "Server.hpp"
-#include "Config.hpp"
+//#include "Server.hpp"
+//#include "Config.hpp"
 #include "Client.hpp"
 #include "Response.hpp"
 //#include "WebServ.hpp"
 
 // class Client;
-class Config;
-struct ServerConfig;
-// class Server;
-
-
-//->modify socket from unsigned int(can't check if < 0) to int
-//manage deletion/adding of fd in the while loop or outside?
+//class Config;
+//struct ServerConfig;
+class Server;
 
 class Supervisor {
 
@@ -45,6 +41,7 @@ class Supervisor {
 		void		runServers(Config configuration);
 		void		updateFdMax(void);
 		void		writeResponseToClient(int client_socket);
+		void		shutDown(void);
 		/*void manageOperations(void);
     	void acceptNewConnection(int server_socket, fd_set &read_fds);
     	void readRequestFromClient(int client_socket, fd_set &read_fds, fd_set &write_fds);
