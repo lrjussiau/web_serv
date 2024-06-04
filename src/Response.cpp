@@ -377,40 +377,31 @@ std::string	executeScript(char **args, const char *interpreter){
 
 	int pipefd[2];
     if (pipe(pipefd) == -1) {
-        perror("pipe");
-        exit(EXIT_FAILURE);
+        throw Except("pipe failed");
     }
     pid_t pid = fork();
     if (pid == -1) {
-        perror("fork");
-        exit(EXIT_FAILURE);
+		throw Except("fork failed");
     }
-    if (pid == 0) { // Child process
-        close(pipefd[0]); // Close unused read end
-
+    if (pid == 0) {
+        close(pipefd[0]);
         dup2(pipefd[1], STDOUT_FILENO);
-        close(pipefd[1]); // Close the write end of the pipe
+        close(pipefd[1]);
 
-        // Execute the Python script
         execve(interpreter, args, NULL);
-        // If execve returns, it must have failed.
-        perror("execve");
-        exit(EXIT_FAILURE);
-    } else { // Parent process
-        close(pipefd[1]); // Close unused write end
+		throw Except("Execve failed");
+    } else {
+        close(pipefd[1]);
         char buffer[128];
         ssize_t count;
         while ((count = read(pipefd[0], buffer, sizeof(buffer) - 1)) > 0) {
             buffer[count] = '\0';
             script_output += buffer;
         }
-        close(pipefd[0]); // Close read end
-
-        // Wait for child process to finish
+        close(pipefd[0]);
         int status;
         waitpid(pid, &status, 0);
     }
-	std::cout << "script output" << script_output << std::endl;
     return script_output;
 }
 
@@ -420,7 +411,6 @@ std::string Response::generateCgi(std::string script, std::string input_string){
 	std::string	script_extension = script.substr(pos + 1, script.length());
 	char 		*args[4];
 
-	std::cout << "In generateCgi" << script_extension << std::endl;
 	if (script_extension == "py"){
 		args[0] = const_cast<char *>("python3");
 		interpreter = "/usr/bin/python3";
@@ -435,7 +425,6 @@ std::string Response::generateCgi(std::string script, std::string input_string){
 		args[0] = const_cast<char *>("bash");
 		interpreter = "/bin/bash";
 	}
-	std::cout << "interpreter used" << interpreter << std::endl;
 	std::string	script_path = "./website" + script;
     args[1] = const_cast<char *>(script_path.c_str());
 	if (input_string.length() != 0){
