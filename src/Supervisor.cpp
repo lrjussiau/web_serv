@@ -141,6 +141,7 @@ void	Supervisor::manageOperations(void){
        	std::cout << YEL << "[Servers] Waiting..." << RST << std::endl;
 		for (int fd = 0; fd <= this->_fd_max; fd++) {
 			if (FD_ISSET(fd, &read_fds) != 0) {
+				std::cout << "An fd is ready to be read" << fd << std::endl;
 				if (isServer(fd)) {
 					if (DEBUG)
 						std::cout << GRN << "[Server "<< fd << "] A connection with a new client is made" << RST << std::endl;
@@ -179,6 +180,7 @@ void Supervisor::acceptNewConnection(int server_socket){
         std::cout << RED << "[Server " << server_socket << "] Accept error" << RST << std::endl;
         return ;
     }
+	//FD_SET(server_socket, &(this->_read_fds));
     FD_SET(client_socket, &(this->_read_fds));
 	FD_SET(client_socket, &(this->_all_sockets));
 	this->_clients_map[client_socket] = new_client;
@@ -189,7 +191,8 @@ void Supervisor::acceptNewConnection(int server_socket){
 
 void Supervisor::readRequestFromClient(int client_socket) {
     char buffer[1000000];
-    int bytes_read;
+    int	bytes_read;
+	bool	nothing_read = true;	
     std::ofstream request_file;
     std::string request_file_path = PATH_TO_REQUESTS;
 	
@@ -201,31 +204,33 @@ void Supervisor::readRequestFromClient(int client_socket) {
     }
 
     memset(&buffer, '\0', sizeof buffer);
-    while ((bytes_read = recv(client_socket, &buffer, sizeof(buffer) - 1, 0)) > 0) {
-        if (bytes_read <= 0) {
-			if (bytes_read == 0) {
-				perror("recv");
-			std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
-			}
-			else {
-				std::cout << "recv error: " << strerror(errno) << std::endl;
-				perror("recv:");
-				//std::cout << GRN << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" << RST << std::endl;
-			}
-			closeClient(client_socket);
-		} else {
-			request_file.write(buffer, bytes_read);
-			if (!request_file) {
-				std::cerr << "Failed to write to request file" << std::endl;
-				return;
-			}
+    while ((bytes_read = recv(client_socket, &buffer, sizeof(buffer) - 1, 0)) > 0){
+		nothing_read = false;
+		request_file.write(buffer, bytes_read);
+		if (!request_file) {
+			std::cerr << "Failed to write to request file" << std::endl;
+			return;
 		}
-        memset(&buffer, '\0', sizeof buffer);
+		memset(&buffer, '\0', sizeof buffer);
     }
-	request_file.close();
-	this->_clients_map[client_socket]->setData(PATH_TO_REQUESTS);
-	FD_SET(client_socket, &(this->_write_fds));
-	FD_CLR(client_socket, &(this->_read_fds));
+	//std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
+	if (nothing_read) {
+		if (bytes_read == 0) {
+			std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
+		}
+		else {
+			std::cout << "recv error: " << strerror(errno) << std::endl;
+			perror("recv:");
+			//std::cout << GRN << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" << RST << std::endl;
+		}
+		closeClient(client_socket);
+	}
+	else{
+		request_file.close();
+		this->_clients_map[client_socket]->setData(PATH_TO_REQUESTS);
+		FD_SET(client_socket, &(this->_write_fds));
+		FD_CLR(client_socket, &(this->_read_fds));
+	}
 
 	return;
 }
@@ -246,7 +251,8 @@ void Supervisor::writeResponseToClient(int client_socket) {
         }
         closeClient(client_socket);
     } else {
-        std::cout << ORG << "successfully sent response" << RST << std::endl; 
+        std::cout << ORG << "successfully sent response" << RST << std::endl;
+		//closeClient(client_socket);
     }
     unlink(PATH_TO_REQUESTS);
     return;

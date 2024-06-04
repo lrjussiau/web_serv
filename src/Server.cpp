@@ -36,13 +36,11 @@ ServerConfig	Server::getServerConfig(void) const{
 void	Server::createServer(ServerConfig server_config){
 	this->_server_config = server_config;
 	for (size_t i = 0; i < server_config.listen_ports.size(); i++) {
-		if (server_config.is_ipv4){
-			try{
-				launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_ipv4);
-			}
-			catch (std::exception &e){
-        	std::cerr << RED << e.what() << RST << std::endl;
-			}
+		try{
+			launchSocket(server_config.listen_ports[i], server_config.server_name, server_config.is_domain);
+		}
+		catch (std::exception &e){
+		std::cerr << RED << e.what() << RST << std::endl;
 		}
     }
 	return;

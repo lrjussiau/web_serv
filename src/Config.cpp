@@ -199,8 +199,8 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
         } else if (token == "server_name") {
             iss >> server.server_name;
             trimSemicolon(server.server_name);
-            if (checkIpv4(server)) {
-                server.is_ipv4 = true;
+            if (!isdigit(server.server_name[0])) {
+                server.is_domain = true;
             }
         } else if (token == "root") {
             iss >> server.root;
