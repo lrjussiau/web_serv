@@ -61,59 +61,52 @@ void    setNonBlocking(int fd, int server) {
     sl.l_onoff = 1;
     sl.l_linger = 0;
     if (fcntl(fd, F_SETFL, O_NONBLOCK) == -1) {
-        perror("fcntl F_SETFL");
+        std::cerr << RED <<  "Error NoBlocking : fcntl F_SETFL error" << RST << std::endl;
         exit(EXIT_FAILURE);
     }
     if (server){
         if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
-            perror("setsockopt");
+            std::cerr << RED << "Error NoBlocking : setsockopt SO_REUSEADDR" << RST << std::endl;
             exit(EXIT_FAILURE);
         }
 	    if (setsockopt(fd, SOL_SOCKET, SO_REUSEPORT, &opt, sizeof(opt)) < 0) {
-		    perror("setsockopt SO_REUSEPORT");
+            std::cerr << RED << "Error NoBlocking : setsockopt SO_REUSEPORT" << RST << std::endl;
 		    exit(EXIT_FAILURE);
 	    }
     }
     else{
         if (setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt))){
-            perror("setsockopt");
+            std::cerr << RED << "Error NoBlocking : setsockopt SO_REUSEADDR" << RST << std::endl;
             exit(EXIT_FAILURE);
         }
         if (setsockopt(fd, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl))){
-            perror("setsockopt");
+            std::cerr << RED << "Error NoBlocking : setsockopt SO_LINGER" << RST << std::endl;
             exit(EXIT_FAILURE);
         }
     }
     return;
 }
 
-int hexToInt(const std::string& hexStr) {
-    std::istringstream iss(hexStr);
-    int value;
-    iss >> std::hex >> value;
-    return value;
-}
-
 std::string generateSessionId(void){
     size_t length = 32;
-    // Create a random device and a Mersenne Twister engine
+
     std::random_device rd;
     std::mt19937_64 eng(rd());
 
-    // Create a distribution to generate random bytes
+
     std::uniform_int_distribution<unsigned long long> distr;
 
-    // Create a string stream to hold the session ID
+
     std::ostringstream oss;
     for (size_t i = 0; i < length / 8; ++i) {
         oss << std::hex << std::setw(16) << std::setfill('0') << distr(eng);
     }
 
-   return oss.str().substr(0, length); // Ensure the length matches exactly
+   return oss.str().substr(0, length);
 }
 
 void signalHandler(int signum) {
-    std::cout << "Interrupt signal (" << signum << ") received.\n";
+    (void) signum;
     running = false;
     return;
 }

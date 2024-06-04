@@ -132,16 +132,14 @@ void	Supervisor::manageOperations(void){
 		fd_set read_fds = this->_read_fds;
 		fd_set write_fds = this->_write_fds;
         if (select(this->_fd_max + 1, &read_fds, &write_fds, NULL, &(this->_timer)) == -1) {
-            fprintf(stderr, "[Server] Select error: %s\n", strerror(errno));
 			if (running != true)
 				shutDown();
 			else
-            	exit(-1);
+            	std::cerr << RED << "Select error" << RST << std::endl;
         }
        	std::cout << YEL << "[Servers] Waiting..." << RST << std::endl;
 		for (int fd = 0; fd <= this->_fd_max; fd++) {
 			if (FD_ISSET(fd, &read_fds) != 0) {
-				std::cout << "An fd is ready to be read" << fd << std::endl;
 				if (isServer(fd)) {
 					if (DEBUG)
 						std::cout << GRN << "[Server "<< fd << "] A connection with a new client is made" << RST << std::endl;
@@ -198,7 +196,7 @@ void Supervisor::readRequestFromClient(int client_socket) {
 	
     request_file.open(request_file_path.c_str(), std::ios::out | std::ios::app | std::ios::binary);
     if (!request_file.is_open()) {
-        std::cerr << "Failed to open request file" << std::endl;
+        std::cerr << RED << "Failed to open request file" << RST << std::endl;
         closeClient(client_socket);
         return;
     }
@@ -208,22 +206,19 @@ void Supervisor::readRequestFromClient(int client_socket) {
 		nothing_read = false;
 		request_file.write(buffer, bytes_read);
 		if (!request_file) {
-			std::cerr << "Failed to write to request file" << std::endl;
+			std::cerr << RED <<  "Failed to write to request file" << RST << std::endl;
 			return;
 		}
 		memset(&buffer, '\0', sizeof buffer);
     }
-	//std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
 	if (nothing_read) {
 		if (bytes_read == 0) {
 			std::cout << GRN << "[Client " << client_socket << "] socket closed connection." << RST << std::endl;
+			closeClient(client_socket);
 		}
 		else {
-			std::cout << "recv error: " << strerror(errno) << std::endl;
-			perror("recv:");
-			//std::cout << GRN << "[Server "<< this->_clients_map[client_socket].getServerSocket() << "] Recv error:" << RST << std::endl;
+			std::cerr << RED << "Error Caught : recv error" << RST << std::endl;
 		}
-		closeClient(client_socket);
 	}
 	else{
 		request_file.close();
@@ -244,15 +239,9 @@ void Supervisor::writeResponseToClient(int client_socket) {
     FD_SET(client_socket, &(this->_read_fds));
     FD_CLR(client_socket, &(this->_write_fds));
     if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1) {
-        if (errno == EPIPE) {
-            std::cout << RED << "[Server "<< client->getServerSocket() << "] Send error to client fd: " << client->getSocket() << " (EPIPE)" << RST << std::endl;
-        } else {
-            std::cout << RED << "[Server "<< client->getServerSocket() << "] Send error to client fd: " << client->getSocket() << " (" << strerror(errno) << ")" << RST << std::endl;
-        }
         closeClient(client_socket);
     } else {
         std::cout << ORG << "successfully sent response" << RST << std::endl;
-		//closeClient(client_socket);
     }
     unlink(PATH_TO_REQUESTS);
     return;

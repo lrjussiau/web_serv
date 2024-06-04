@@ -5,22 +5,19 @@
 
 std::atomic<bool> running (true);
 
-
-void handle_sigpipe(int sig) {
-    std::cerr << "Caught SIGPIPE: " << sig << std::endl;
-}
-
 int main(int argc, char **argv) {
 
-    signal(SIGPIPE, handle_sigpipe);
     signal(SIGINT, signalHandler);
 	try {
-		if (argc != 2)
-        	throw Except("Please provide a config file. ./web_serv \"file\"");
-		Config Test;
+        Config config;
         Supervisor supervisor;
-		Test.parseConfigFile(argv[1]);
-        supervisor.runServers(Test);
+		if (argc > 2)
+        	throw Except("Please use this configuration : ./web_serv \"file\"");
+        if (argc == 1)
+            config.parseConfigFile("config/default.conf");
+        else
+            config.parseConfigFile(argv[1]);
+        supervisor.runServers(config);
         supervisor.manageOperations();
     } catch (const Except& e) {
         std::cout << RED << "Caught an exception: " << e.what() << RST << std::endl;

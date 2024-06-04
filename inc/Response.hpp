@@ -33,6 +33,7 @@ class Response {
 		bool		isCGI();
 		bool		checkMimeType();
 		bool		isRedirect();
+		bool		checkBodySize();
 		Location*	findLocation();
 		std::string findPath(Location* location);
 		void		fileListing(std::string directory);

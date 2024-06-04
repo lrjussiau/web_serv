@@ -31,6 +31,11 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 	if (DEBUG_REPONSE) {
 		std::cout << GRN << "Debug Reponse Path :" << RST << std::endl;
 	}
+	if (checkBodySize())
+		return;
+	if (DEBUG_REPONSE) {
+		std::cout << "\t| Check Body Size : " << GRN << "OK" << RST << std::endl;
+	}
 	if (isMethodWrong())
 		return;
 	if (DEBUG_REPONSE) {
@@ -123,6 +128,30 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 // 						 Checker
 // ------------------------------------------------------
 
+bool Response::checkBodySize() {
+	std::ifstream file;
+	size_t byte_read = 0;
+
+	file.open(PATH_TO_REQUESTS, std::ios::binary);
+	if (!file.is_open()) {
+		std::cerr << RED << "Error: Could not open file: " << PATH_TO_REQUESTS << RST << std::endl;
+		return true;
+	}
+	while (file.get() != EOF)
+	{
+		byte_read++;
+	}
+	if (byte_read > _server.client_max_body_size) {
+		if (DEBUG_REPONSE) {
+			std::cout << "\t| " << "Body too large : " << byte_read << GRN << " Redirect 413" << RST << std::endl;
+		}
+		createContent(_server.root + "/" + _server.error_pages[413], 413, "Request Entity Too Large");
+		return true;
+	}
+	return false;
+	
+}
+
 bool Response::checkMimeType() {
 	std::string mime = _client->getRequestMimetype();
 
@@ -162,7 +191,6 @@ bool	Response::isCookie(Client *client) {
 }
 
 bool	Response::isCGI() {
-	std::cout << " I am in : " << _client->getRequestedUrl() <<std::endl;
 	if (_client->getRequestMethod() == "POST" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
 		std::cout << "hh" << _client->getBuffer() << std::endl;
 		this->_content = generateCgi(_client->getRequestedUrl(), _client->getBuffer());
@@ -249,7 +277,7 @@ void Response::createContent(std::string path, int status_code, std::string stat
     if (status_message != "autoindex" && status_message != "CGI" && _client->getRequestMethod() != "DELETE"){
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
-            std::cerr << RED << "Error: Could not open file: " << RST << path << std::endl;
+            std::cerr << RED << "Error: Could not open file: " << path << RST << std::endl;
             return;
         }
         content_stream << file.rdbuf();
@@ -433,7 +461,13 @@ std::string Response::generateCgi(std::string script, std::string input_string){
 	}
 	else
 		args[2] = NULL;
-    return executeScript(args, interpreter.c_str());
+	try {
+		std::string output = executeScript(args, interpreter.c_str());
+		return (output);
+	} catch (const Except& e) {
+		std::cerr << RED << "Caught an exception: " << e.what() << RST << std::endl;
+	}
+    return (NULL);
 }
 
 // ------------------------------------------------------
@@ -446,7 +480,6 @@ std::vector<std::string>	getFiles(std::string dir_requested){
 
     DIR* dir = opendir(dir_requested.c_str());
     if (dir == NULL) {
-		perror("opendir");
         std::cerr << RED << "Error: Unable to open directory " << dir_requested << RST <<std::endl;
         return files;
     }

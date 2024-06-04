@@ -92,12 +92,10 @@ void Client::setData(std::string filePath) {
                 this->_requestMimetype = token;
             }
         }
-        //cgi
         if (this->_requestedUrl == "/cgi-bin/base64encoder.py" && line.find("input") != std::string::npos) {
             this->_buffer = line.substr(6, line.length() - 6);
             break;
         }
-        //cookie
         if (this->_requestedUrl == "/cookie" && line.find("userName") != std::string::npos){
             this->_buffer = line.substr(9, line.length() - 9);
             break;

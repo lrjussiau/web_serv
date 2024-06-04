@@ -201,10 +201,6 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
             trimSemicolon(server.server_name);
             if (!isdigit(server.server_name[0])) {
                 server.is_domain = true;
-            } else {
-                // if (!checkIpv6(server)) {
-                //     throw Except("Invalid server_name: " + server.server_name);
-                // }
             }
         } else if (token == "root") {
             iss >> server.root;
@@ -221,7 +217,6 @@ void Config::parseServerBlock(std::ifstream &file, ServerConfig &server) {
         } else if (token == "location") {
 			std::string path;
 			iss >> path;
-            // server.locations[path].path = path;
             server.locations[path] = parseLocationBlock(file, path);
         } else if (token == "}") {
             break;
@@ -411,6 +406,12 @@ void Config::checkConfig() const {
         }
         if (server.error_pages.empty()) {
             throw Except("Server block missing error_page directive");
+        }
+        if (server.error_pages.find(404) == server.error_pages.end()) {
+            throw Except("Server block missing error_page for 404");
+        }
+        if (server.client_max_body_size < 2000) {
+            throw Except("Invalid client_max_body_size: " + std::to_string(server.client_max_body_size) + ", must be at least 2000 bytes");
         }
         else {
             for (std::map<int, std::string>::const_iterator ep_it = server.error_pages.begin(); ep_it != server.error_pages.end(); ++ep_it) {
