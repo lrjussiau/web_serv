@@ -18,7 +18,7 @@ struct Location {
 struct ServerConfig {
     std::vector<int>                listen_ports;
     std::string                     server_name;
-    bool                            is_ipv4;
+    bool                            is_domain;
     std::string                     root;
     std::string                     index;
     std::map<int, std::string>    	error_pages;

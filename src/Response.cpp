@@ -214,7 +214,10 @@ void	Response::handleDirectory(std::string path, Location *location) {
 		if (DEBUG_REPONSE) {
 			std::cout << "\t| "<< "\t Path to auto index : " << GRN << auto_index << RST << std::endl;
 		}
-		generateAutoIndex(auto_index);
+		if (_client->getRequestedUrl() == "/upload")
+			fileListing(auto_index);
+		else
+			generateAutoIndex(auto_index);
 	} else {
 		if (DEBUG_REPONSE) {
 			std::cout << "\t| " << GRN << "\t is a directory: Auto index desactivate, 403" << RST << std::endl;
@@ -482,6 +485,20 @@ void	Response::generateAutoIndex(std::string dir_requested){
 	auto_index += "<h1>"+ dir_requested + "/</h1><hr><pre><a href=\"../\">../</a>";
 	for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it){
 		auto_index += "<a href=\"" + *it + "/\">" + *it + "/</a>\n";     
+	}
+	auto_index += "</body>\n</html>\n";
+	this->_content = auto_index;
+	createContent("", 200, "autoindex");
+}
+
+void Response::fileListing(std::string directory){
+	std::string					auto_index;
+    std::vector<std::string>	files = getFiles(directory);
+
+	auto_index += "<!DOCTYPE html>\n<html>\n<head><title>Uploaded files/</title></head>\n<body>\n";
+	auto_index += "<h1>Uploaded files/</h1>";
+	for (std::vector<std::string>::iterator it = files.begin(); it != files.end(); ++it){
+		auto_index += "<h2>" + *it + "</h2>\n";     
 	}
 	auto_index += "</body>\n</html>\n";
 	this->_content = auto_index;

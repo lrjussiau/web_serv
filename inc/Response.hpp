@@ -35,6 +35,7 @@ class Response {
 		bool		isRedirect();
 		Location*	findLocation();
 		std::string findPath(Location* location);
+		void		fileListing(std::string directory);
 
 	public:
 		Response(void);
@@ -44,6 +45,7 @@ class Response {
 
 
 		std::string getFinalReply(void) const;
+
 
 		
 };
