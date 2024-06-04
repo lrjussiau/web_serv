@@ -5,14 +5,8 @@
 
 std::atomic<bool> running (true);
 
-
-void handle_sigpipe(int sig) {
-    (void)sig;
-}
-
 int main(int argc, char **argv) {
 
-    signal(SIGPIPE, handle_sigpipe);
     signal(SIGINT, signalHandler);
 	try {
         Config config;

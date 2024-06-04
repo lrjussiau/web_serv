@@ -134,7 +134,7 @@ bool Response::checkBodySize() {
 
 	file.open(PATH_TO_REQUESTS, std::ios::binary);
 	if (!file.is_open()) {
-		std::cerr << RED << "Error: Could not open file: " << RST << PATH_TO_REQUESTS << std::endl;
+		std::cerr << RED << "Error: Could not open file: " << PATH_TO_REQUESTS << RST << std::endl;
 		return true;
 	}
 	while (file.get() != EOF)
@@ -191,7 +191,6 @@ bool	Response::isCookie(Client *client) {
 }
 
 bool	Response::isCGI() {
-	std::cout << " I am in : " << _client->getRequestedUrl() <<std::endl;
 	if (_client->getRequestMethod() == "POST" && (_client->getRequestedUrl().find("/cgi-bin") != std::string::npos)){
 		std::cout << "hh" << _client->getBuffer() << std::endl;
 		this->_content = generateCgi(_client->getRequestedUrl(), _client->getBuffer());
@@ -278,7 +277,7 @@ void Response::createContent(std::string path, int status_code, std::string stat
     if (status_message != "autoindex" && status_message != "CGI" && _client->getRequestMethod() != "DELETE"){
         file.open(path.c_str(), std::ios::binary);
         if (!file.is_open()) {
-            std::cerr << RED << "Error: Could not open file: " << RST << path << std::endl;
+            std::cerr << RED << "Error: Could not open file: " << path << RST << std::endl;
             return;
         }
         content_stream << file.rdbuf();
@@ -481,7 +480,6 @@ std::vector<std::string>	getFiles(std::string dir_requested){
 
     DIR* dir = opendir(dir_requested.c_str());
     if (dir == NULL) {
-		perror("opendir");
         std::cerr << RED << "Error: Unable to open directory " << dir_requested << RST <<std::endl;
         return files;
     }

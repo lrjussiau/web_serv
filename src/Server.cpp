@@ -51,14 +51,12 @@ std::string	resolveDomainToIp(std::string domain_name){
     char 	ip_str[INET_ADDRSTRLEN];
 	void 	*addr;
 
-	std::cout << "ipstr: " << std::endl;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;
     hints.ai_socktype = SOCK_STREAM;
 
     if (getaddrinfo(domain_name.c_str(), nullptr, &hints, &res)) {
-		//gai_strerror(status)
-        std::cerr << "getaddrinfo error: " << std::endl;
+        std::cerr << RED << "Error Caught : getaddrinfo error" << RST << std::endl;
         exit(-1);
     }
 	for (p = res; p != nullptr; p = p->ai_next) {
@@ -79,7 +77,7 @@ int Server::launchSocket(uint32_t port, std::string ip, bool domain_name) {
 	int					server_socket;
 
     memset(&sa, 0, sizeof sa);
-	if (!domain_name)
+	if (domain_name)
 		ip = resolveDomainToIp(ip);
 	inet_pton(AF_INET, ip.c_str(), &sa.sin_addr);
 	sa.sin_family = AF_INET;
@@ -91,8 +89,7 @@ int Server::launchSocket(uint32_t port, std::string ip, bool domain_name) {
         throw ServerSocketError();
     }
     if (bind(server_socket, (struct sockaddr *)&sa, sizeof sa)) {
-		fprintf(stderr, "[Server] Binding error: %s\n", strerror(errno));
-    	//throw ServerBindingError();
+    	throw ServerBindingError();
 	}
     if (listen(server_socket, SOMAXCONN)) {
         throw ServerListeningError();
