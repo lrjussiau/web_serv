@@ -31,6 +31,11 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 	if (DEBUG_REPONSE) {
 		std::cout << GRN << "Debug Reponse Path :" << RST << std::endl;
 	}
+	if (checkBodySize())
+		return;
+	if (DEBUG_REPONSE) {
+		std::cout << "\t| Check Body Size : " << GRN << "OK" << RST << std::endl;
+	}
 	if (isMethodWrong())
 		return;
 	if (DEBUG_REPONSE) {
@@ -122,6 +127,30 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 // ------------------------------------------------------
 // 						 Checker
 // ------------------------------------------------------
+
+bool Response::checkBodySize() {
+	std::ifstream file;
+	size_t byte_read = 0;
+
+	file.open(PATH_TO_REQUESTS, std::ios::binary);
+	if (!file.is_open()) {
+		std::cerr << RED << "Error: Could not open file: " << RST << PATH_TO_REQUESTS << std::endl;
+		return true;
+	}
+	while (file.get() != EOF)
+	{
+		byte_read++;
+	}
+	if (byte_read > _server.client_max_body_size) {
+		if (DEBUG_REPONSE) {
+			std::cout << "\t| " << "Body too large : " << byte_read << GRN << " Redirect 413" << RST << std::endl;
+		}
+		createContent(_server.root + "/" + _server.error_pages[413], 413, "Request Entity Too Large");
+		return true;
+	}
+	return false;
+	
+}
 
 bool Response::checkMimeType() {
 	std::string mime = _client->getRequestMimetype();
@@ -430,7 +459,13 @@ std::string Response::generateCgi(std::string script, std::string input_string){
 	}
 	else
 		args[2] = NULL;
-    return executeScript(args, interpreter.c_str());
+	try {
+		std::string output = executeScript(args, interpreter.c_str());
+		return (output);
+	} catch (const Except& e) {
+		std::cerr << RED << "Caught an exception: " << e.what() << RST << std::endl;
+	}
+    return (NULL);
 }
 
 // ------------------------------------------------------

@@ -86,23 +86,14 @@ Ce projet implémente un serveur web simplifié en C++ capable de gérer des con
 - **Mises à jour des descripteurs de fichiers** :
   - `updateFdMax` et `fdSetRemove` : Gèrent les descripteurs de fichiers pour `select`.
 
-### Utilitaires et Définitions
-
-#### Responsabilités
-- Fournir des fonctions utilitaires et des définitions communes pour l'ensemble du projet.
-
-#### Fonctionnalités
-- **Utilitaires** :
-  - Fonctions pour convertir des valeurs hexadécimales en entier, obtenir le type de chemin (fichier ou répertoire), générer des ID de session, etc.
-- **Exceptions** :
-  - Classes d'exception personnalisées pour gérer les erreurs spécifiques du serveur.
 ---	
 # Conclusion
 
 Le projet WebServ implémente un serveur web en C++ capable de :
 - Charger et analyser sa configuration.
 - Accepter et gérer les connexions clients.
-- Traiter les requêtes HTTP, y compris les requêtes POST avec ou sans encodage par morceaux.
+- Traiter les requêtes HTTP GET et DELETE.
+- Traiter les requêtes HTTP POST avec ou sans encodage par morceaux.
 - Générer des réponses HTTP appropriées.
 - Superviser les opérations de lecture et d'écriture sur les sockets.
 

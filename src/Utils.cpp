@@ -87,13 +87,6 @@ void    setNonBlocking(int fd, int server) {
     return;
 }
 
-int hexToInt(const std::string& hexStr) {
-    std::istringstream iss(hexStr);
-    int value;
-    iss >> std::hex >> value;
-    return value;
-}
-
 std::string generateSessionId(void){
     size_t length = 32;
     // Create a random device and a Mersenne Twister engine
