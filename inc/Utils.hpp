@@ -2,7 +2,6 @@
 #define UTILS_HPP
 
 #include "WebServ.hpp"
-//#include "Supervisor.hpp"
 
 enum PathType {
     PATH_NOT_FOUND,

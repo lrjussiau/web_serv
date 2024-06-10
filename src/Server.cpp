@@ -77,8 +77,9 @@ int Server::launchSocket(uint32_t port, std::string ip, bool domain_name) {
 	int					server_socket;
 
     memset(&sa, 0, sizeof sa);
-	if (domain_name)
+	if (domain_name){
 		ip = resolveDomainToIp(ip);
+	}
 	inet_pton(AF_INET, ip.c_str(), &sa.sin_addr);
 	sa.sin_family = AF_INET;
     sa.sin_port = htons(port);

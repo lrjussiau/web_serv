@@ -1,8 +1,6 @@
 #ifndef RESPONSE_HPP
 #define RESPONSE_HPP
 
-//#include "WebServ.hpp"
-//#include "Client.hpp"
 #include "Config.hpp"
 #include "Utils.hpp"
 

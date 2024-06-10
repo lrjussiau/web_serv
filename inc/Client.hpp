@@ -8,8 +8,6 @@ class Client {
 	private:
 		int			_socket;
 		int			_server_socket;
-		// std::string _request_buffer;
-    	// std::string _response_Buffer;
     	std::string _requestedUrl;
 		std::string _requestMethod;
 		std::string _requestProtocol;
