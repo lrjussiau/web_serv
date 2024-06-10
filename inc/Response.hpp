@@ -32,6 +32,8 @@ class Response {
 		bool		checkMimeType();
 		bool		isRedirect();
 		bool		checkBodySize();
+		bool		hasDeletePermission(const char* filepath, uid_t user_id, gid_t group_id);
+
 		Location*	findLocation();
 		std::string findPath(Location* location);
 		void		fileListing(std::string directory);

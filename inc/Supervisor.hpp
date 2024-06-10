@@ -26,12 +26,12 @@ class Supervisor {
 
 		void		acceptNewConnection(int server_socket);
 		void		closeClient(int client_socket);
-		void		closeServer(int server_socket);
-		void		fdSetRemove(int socket);
+		//void		closeServer(int server_socket);
+		//void		fdSetRemove(int socket);
 		int			isServer(int socket) const;
 		void		manageOperations(void);
 		void		readRequestFromClient(int client_socket);
-		void		removeClientsFromServer(int server_socket);
+		//void		removeClientsFromServer(int server_socket);
 		void		runServers(Config configuration);
 		void		updateFdMax(void);
 		void		writeResponseToClient(int client_socket);

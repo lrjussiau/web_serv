@@ -32,13 +32,13 @@ void	Supervisor::updateFdMax(void) {
 	this->_fd_max = max;
 }
 
-void	Supervisor::fdSetRemove(int socket){
+/*void	Supervisor::fdSetRemove(int socket){
 	//close(socket_fd);
 	FD_CLR(socket, &(this->_all_sockets));
 	FD_CLR(socket, &(this->_read_fds));
 	FD_CLR(socket, &(this->_write_fds));
 	updateFdMax();
-}
+}*/
 
 /*				util				*/
 
@@ -86,7 +86,7 @@ void	Supervisor::runServers(Config configuration){
 	return;
 }
 
-void	Supervisor::closeServer(int server_socket){
+/*void	Supervisor::closeServer(int server_socket){
 	Server								*server = this->_servers_map[server_socket];
 	std::vector<int>					server_sockets = server->getSockets();
 	std::map<int, Server*>::iterator	it;
@@ -101,11 +101,11 @@ void	Supervisor::closeServer(int server_socket){
 	}
 	updateFdMax();
 	return;
-}
+}*/
 
 /*				client deletion				*/
 
-void	Supervisor::removeClientsFromServer(int server_socket){
+/*void	Supervisor::removeClientsFromServer(int server_socket){
 	for (std::map<int, Client*>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
 		if (it->second->getServerSocket() == server_socket){
 			fdSetRemove(it->first);
@@ -113,7 +113,7 @@ void	Supervisor::removeClientsFromServer(int server_socket){
 			this->_clients_map.erase(it);
 		}
 	}
-}
+}*/
 
 void	Supervisor::closeClient(int client_socket){
 	std::map<int, Client*>::iterator it = this->_clients_map.find(client_socket);

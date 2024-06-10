@@ -111,6 +111,16 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 		createContent("./website/html/sucess.html", 201, "Created");
 		return;
 	} else if (client->getRequestMethod() == "DELETE") {
+		uid_t user_id = getuid();
+		gid_t group_id = getgid();
+		if (!hasDeletePermission(path.c_str(), user_id, group_id)) {
+			if (DEBUG_REPONSE) {
+				std::cout << "\t| " << "Path to delete : " << GRN << path << RST << std::endl;
+				std::cout << "\t| " << ORG << "No permission to delete - 403" << RST << std::endl;
+			}
+			createContent(_server.root + "/" + _server.error_pages[403], 403, "Forbidden");
+			return;
+    	}
 		if (DEBUG_REPONSE) {
 			std::cout << "\t| " << "Path to delete : " << GRN << path << RST << std::endl;
 			std::cout << "\t| " << GRN << "Create a 204 request" << RST << std::endl;
@@ -221,6 +231,24 @@ bool	Response::isRedirect() {
 		}
 	}
 	return (false);
+}
+
+bool Response::hasDeletePermission(const char* filepath, uid_t user_id, gid_t group_id) {
+    struct stat file_stat;
+
+    if (stat(filepath, &file_stat) != 0) {
+        std::cerr << "Error getting file status: " << strerror(errno) << std::endl;
+        return false;
+    }
+    bool isOwner = (file_stat.st_uid == user_id);
+    bool isGroupMember = (file_stat.st_gid == group_id);
+    if (isOwner) {
+        return (file_stat.st_mode & S_IWUSR) != 0;
+    } else if (isGroupMember) {
+        return (file_stat.st_mode & S_IWGRP) != 0;
+    } else {
+        return (file_stat.st_mode & S_IWOTH) != 0;
+    }
 }
 
 void	Response::handleDirectory(std::string path, Location *location) {
