@@ -32,14 +32,6 @@ void	Supervisor::updateFdMax(void) {
 	this->_fd_max = max;
 }
 
-/*void	Supervisor::fdSetRemove(int socket){
-	//close(socket_fd);
-	FD_CLR(socket, &(this->_all_sockets));
-	FD_CLR(socket, &(this->_read_fds));
-	FD_CLR(socket, &(this->_write_fds));
-	updateFdMax();
-}*/
-
 /*				util				*/
 
 int		Supervisor::isServer(int socket) const{
@@ -51,7 +43,6 @@ int		Supervisor::isServer(int socket) const{
 	return 1;
 }
 
-//->delete
 void		Supervisor::shutDown(void){
 	std::cout << GRN <<  "Closing all connections" << RST << std::endl;
 	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
@@ -85,35 +76,6 @@ void	Supervisor::runServers(Config configuration){
 	updateFdMax();
 	return;
 }
-
-/*void	Supervisor::closeServer(int server_socket){
-	Server								*server = this->_servers_map[server_socket];
-	std::vector<int>					server_sockets = server->getSockets();
-	std::map<int, Server*>::iterator	it;
-
-	for (unsigned long i = 0; i < server_sockets.size(); i++){
-		fdSetRemove(server_sockets[i]);
-		it = this->_servers_map.find(server_sockets[i]);
-		//free(it->second);
-		this->_servers_map.erase(it);
-		removeClientsFromServer(server_socket);
-		close(server_sockets[i]);
-	}
-	updateFdMax();
-	return;
-}*/
-
-/*				client deletion				*/
-
-/*void	Supervisor::removeClientsFromServer(int server_socket){
-	for (std::map<int, Client*>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
-		if (it->second->getServerSocket() == server_socket){
-			fdSetRemove(it->first);
-			close(it->first);
-			this->_clients_map.erase(it);
-		}
-	}
-}*/
 
 void	Supervisor::closeClient(int client_socket){
 	std::map<int, Client*>::iterator it = this->_clients_map.find(client_socket);
@@ -220,7 +182,7 @@ void Supervisor::readRequestFromClient(int client_socket) {
 			closeClient(client_socket);
 		}
 		else {
-			std::cerr << RED << "Error Caught : recv error" << RST << std::endl;
+			std::cerr << ORG << "Error Caught : recv error" << RST << std::endl;
 		}
 	}
 	else{
