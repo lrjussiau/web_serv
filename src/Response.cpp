@@ -47,8 +47,10 @@ Response::Response(Client *client, ServerConfig server) : _client(client) , _ser
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Cookie : " << GRN << "OK" << RST << std::endl;
 	}
-	if (isRedirect())
-		return;
+	if (client->getRequestMethod() == "GET") {
+		if (isRedirect())
+			return;
+	}
 	if (DEBUG_REPONSE) {
 		std::cout << "\t| Check Redirect : " << GRN << "OK" << RST << std::endl;
 	}
@@ -362,20 +364,20 @@ std::string	Response::getFinalReply(void) const{
 }
 
 Location* Response::findLocation() { 
-	for (std::map<std::string, Location>::iterator it = _server.locations.begin(); it != _server.locations.end(); ++it) {
-		size_t pos = _client->getRequestedUrl().find(it->first);
+    for (std::map<std::string, Location>::iterator it = _server.locations.begin(); it != _server.locations.end(); ++it) {
+        const std::string& location = it->first;
+        const std::string& requestedUrl = _client->getRequestedUrl();
 
-		if (pos != std::string::npos) {
-			// if (!it->second.redirect.empty()){
-			// 	std::cout << GRN << "\t| A redirect response is made" << RST << std::endl;
-			// 	buildRedirectResponse(it->second.redirect);
-			// 	return (NULL);
-			// }
-			if (_client->getRequestedUrl()[it->first.size()] != '.')
-				return &(it->second);
-		}
-	}
-	return (NULL);
+        if (requestedUrl.compare(0, location.size(), location) == 0) {
+            if (requestedUrl.size() == location.size() || 
+                requestedUrl[location.size()] == '/' || 
+                requestedUrl[location.size()] == '?' || 
+                requestedUrl[location.size()] == '&') {
+                return &(it->second);
+            }
+        }
+    }
+    return NULL;
 }
 
 std::string Response::findPath(Location *location) {

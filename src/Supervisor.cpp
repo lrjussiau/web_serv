@@ -123,6 +123,8 @@ void	Supervisor::closeClient(int client_socket){
     FD_CLR(client_socket, &this->_read_fds);
     FD_CLR(client_socket, &this->_write_fds);
 	this->_clients_map.erase(it);
+	if (it->second != NULL)
+		delete it->second;
 	updateFdMax();
 
 }
