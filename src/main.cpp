@@ -3,9 +3,14 @@
 #include "../inc/Utils.hpp"
 #include "../inc/Supervisor.hpp"
 
+
+#include <unistd>
+
 std::atomic<bool> running (true);
 
 int main(int argc, char **argv) {
+
+    sleep(10);
 
     signal(SIGINT, signalHandler);
 	try {

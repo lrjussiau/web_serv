@@ -51,10 +51,12 @@ int		Supervisor::isServer(int socket) const{
 	return 1;
 }
 
+//->delete
 void		Supervisor::shutDown(void){
 	std::cout << GRN <<  "Closing all connections" << RST << std::endl;
 	for (std::map<int, Server*>::iterator it = this->_servers_map.begin(); it != this->_servers_map.end(); ++it){
 		close(it->first);
+	
 	}
 	for (std::map<int, Client*>::iterator it = this->_clients_map.begin(); it != this->_clients_map.end(); ++it){
 		close(it->first);
