@@ -182,7 +182,6 @@ void Supervisor::acceptNewConnection(int server_socket){
         std::cout << RED << "[Server " << server_socket << "] Accept error" << RST << std::endl;
         return ;
     }
-	//FD_SET(server_socket, &(this->_read_fds));
     FD_SET(client_socket, &(this->_read_fds));
 	FD_SET(client_socket, &(this->_all_sockets));
 	this->_clients_map[client_socket] = new_client;
@@ -238,15 +237,20 @@ void Supervisor::writeResponseToClient(int client_socket) {
     Client *client = this->_clients_map[client_socket];
     Server *server = this->_servers_map[client->getServerSocket()];
     ServerConfig conf = server->getServerConfig();
-    Response response(client, server->getServerConfig());
+    Response	response(client, server->getServerConfig());
+	ssize_t		bytes_sent;	
 
     FD_SET(client_socket, &(this->_read_fds));
     FD_CLR(client_socket, &(this->_write_fds));
-    if (send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT) == -1) {
+	bytes_sent = send(client_socket, response.getFinalReply().c_str(), response.getFinalReply().length(), MSG_DONTWAIT);
+    if (bytes_sent == -1) {
         closeClient(client_socket);
-    } else {
+    } else if (bytes_sent == (int)response.getFinalReply().length()){
         std::cout << ORG << "successfully sent response" << RST << std::endl;
     }
+	else{
+		std::cout << ORG << "successfully sent part of response" <<  bytes_sent << RST << std::endl;
+	}
     unlink(PATH_TO_REQUESTS);
     return;
 }

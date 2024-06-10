@@ -76,7 +76,6 @@ int Server::launchSocket(uint32_t port, std::string ip, bool domain_name) {
 	struct sockaddr_in sa;
 	int					server_socket;
 
-	//std::cout << "hello" << std::endl;
     memset(&sa, 0, sizeof sa);
 	if (domain_name){
 		ip = resolveDomainToIp(ip);
